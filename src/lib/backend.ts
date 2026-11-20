@@ -11,8 +11,23 @@ export interface Backend {
   subscribe(onChange: (row: Row | null, deletedId?: string) => void): () => void
 }
 
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
-const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
+/** Accept the URL however it was pasted: quotes, spaces, a trailing slash or an
+ *  /rest/v1 or /auth/v1 path all reduce to https://<project>.supabase.co */
+export function normalizeSupabaseUrl(raw: string | undefined): string | undefined {
+  const v = raw?.trim().replace(/^['"]|['"]$/g, '').trim()
+  if (!v) return undefined
+  try {
+    const u = new URL(/^https?:\/\//i.test(v) ? v : `https://${v}`)
+    // A dashboard link (supabase.com/dashboard/project/<ref>) points at the project's API host.
+    const ref = /(^|\.)supabase\.com$/i.test(u.hostname) && u.pathname.match(/\/project\/([a-z0-9]+)/i)?.[1]
+    return ref ? `https://${ref}.supabase.co` : u.origin
+  } catch {
+    return v.replace(/\/+$/, '')
+  }
+}
+
+const url = normalizeSupabaseUrl(import.meta.env.VITE_SUPABASE_URL as string | undefined)
+const key = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim().replace(/^['"]|['"]$/g, '') || undefined
 
 export const supabase: SupabaseClient | null = url && key ? createClient(url, key) : null
 export const isDemo = !supabase
