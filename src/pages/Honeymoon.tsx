@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useParams } from 'react-router-dom'
 import { useI18n } from '../lib/i18n'
 import { useStore } from '../lib/store'
@@ -7,17 +7,17 @@ import { fmtDate, money, num, resizeImage } from '../lib/util'
 import { Bar, Empty, Fab, Field, PageHead, Sheet, Text } from '../components/ui'
 
 /** Places that suit a honeymoon in mid to late August, leaving from Austria. Rough guides only. */
-export const PROPOSALS: (Omit<HmDest, 'status'> & { tone: string })[] = [
-  { name: 'Madeira', country: 'Portugal', airport: 'FNC', flightHours: 4, estCost: 3800, weather: '24–26°, mild and sunny', why: 'Cliffs, levada walks, ocean pools and quiet boutique hotels. Not too hot in August.', tone: 'sage' },
-  { name: 'Santorini and Naxos', country: 'Greece', airport: 'JTR', flightHours: 2.5, estCost: 4200, weather: '28–30°, dry, windy evenings', why: 'Famous sunsets on Santorini, then calmer beaches on Naxos. Book early for August.', tone: 'sky' },
-  { name: 'Amalfi Coast', country: 'Italy', airport: 'NAP', flightHours: 1.5, estCost: 4500, weather: '30°, hot and dry', why: 'Cliffside villages, boat days to Capri, and great food. Busy in August.', tone: 'gold' },
-  { name: 'Mauritius', country: 'Mauritius', airport: 'MRU', flightHours: 13, estCost: 6500, weather: '23–25°, dry winter season', why: 'Lagoons, resorts with private beaches, and pleasant temperatures in August.', tone: 'sky' },
-  { name: 'Zanzibar', country: 'Tanzania', airport: 'ZNZ', flightHours: 9, estCost: 4800, weather: '28°, dry season', why: 'White beaches and Stone Town. Can be combined with a short safari.', tone: 'gold' },
-  { name: 'Bali', country: 'Indonesia', airport: 'DPS', flightHours: 16, estCost: 5200, weather: '27°, dry season', why: 'Rice terraces, villas with pools, and beaches. Long flight but great value once there.', tone: 'sage' },
-  { name: 'Seychelles', country: 'Seychelles', airport: 'SEZ', flightHours: 11, estCost: 7500, weather: '26–27°, breezy', why: 'Some of the most beautiful beaches in the world, very private and calm.', tone: 'rose' },
-  { name: 'Maldives', country: 'Maldives', airport: 'MLE', flightHours: 11, estCost: 8000, weather: '29°, some showers in August', why: 'Overwater villas and snorkelling. Lower prices in August, with short tropical showers.', tone: 'sky' },
-  { name: 'Croatian islands', country: 'Croatia', airport: 'SPU', flightHours: 1, estCost: 3000, weather: '28°, sunny', why: 'Hvar, Vis and Brač by boat. Close to home, you could even drive.', tone: 'rose' },
-  { name: 'Norwegian fjords', country: 'Norway', airport: 'BGO', flightHours: 2.5, estCost: 4500, weather: '18–20°, cool', why: 'A cool, dramatic alternative: fjord cruises, cabins and long summer evenings.', tone: 'sage' }
+export const PROPOSALS: (Omit<HmDest, 'status'> & { tone: string; wiki: string })[] = [
+  { name: 'Madeira', wiki: 'Ponta de São Lourenço', country: 'Portugal', airport: 'FNC', flightHours: 4, estCost: 3800, weather: '24–26°, mild and sunny', why: 'Cliffs, levada walks, ocean pools and quiet boutique hotels. Not too hot in August.', tone: 'sage' },
+  { name: 'Santorini and Naxos', wiki: 'Oia, Greece', country: 'Greece', airport: 'JTR', flightHours: 2.5, estCost: 4200, weather: '28–30°, dry, windy evenings', why: 'Famous sunsets on Santorini, then calmer beaches on Naxos. Book early for August.', tone: 'sky' },
+  { name: 'Amalfi Coast', wiki: 'Positano', country: 'Italy', airport: 'NAP', flightHours: 1.5, estCost: 4500, weather: '30°, hot and dry', why: 'Cliffside villages, boat days to Capri, and great food. Busy in August.', tone: 'gold' },
+  { name: 'Mauritius', wiki: 'Le Morne Brabant', country: 'Mauritius', airport: 'MRU', flightHours: 13, estCost: 6500, weather: '23–25°, dry winter season', why: 'Lagoons, resorts with private beaches, and pleasant temperatures in August.', tone: 'sky' },
+  { name: 'Zanzibar', wiki: 'Nungwi', country: 'Tanzania', airport: 'ZNZ', flightHours: 9, estCost: 4800, weather: '28°, dry season', why: 'White beaches and Stone Town. Can be combined with a short safari.', tone: 'gold' },
+  { name: 'Bali', wiki: 'Tanah Lot', country: 'Indonesia', airport: 'DPS', flightHours: 16, estCost: 5200, weather: '27°, dry season', why: 'Rice terraces, villas with pools, and beaches. Long flight but great value once there.', tone: 'sage' },
+  { name: 'Seychelles', wiki: "Anse Source d'Argent", country: 'Seychelles', airport: 'SEZ', flightHours: 11, estCost: 7500, weather: '26–27°, breezy', why: 'Some of the most beautiful beaches in the world, very private and calm.', tone: 'rose' },
+  { name: 'Maldives', wiki: 'Maldives', country: 'Maldives', airport: 'MLE', flightHours: 11, estCost: 8000, weather: '29°, some showers in August', why: 'Overwater villas and snorkelling. Lower prices in August, with short tropical showers.', tone: 'sky' },
+  { name: 'Croatian islands', wiki: 'Hvar (town)', country: 'Croatia', airport: 'SPU', flightHours: 1, estCost: 3000, weather: '28°, sunny', why: 'Hvar, Vis and Brač by boat. Close to home, you could even drive.', tone: 'rose' },
+  { name: 'Norwegian fjords', wiki: 'Geirangerfjord', country: 'Norway', airport: 'BGO', flightHours: 2.5, estCost: 4500, weather: '18–20°, cool', why: 'A cool, dramatic alternative: fjord cruises, cabins and long summer evenings.', tone: 'sage' }
 ]
 
 const STATUS_LABEL: Record<HmStatus, string> = { idea: 'Idea', shortlist: 'Shortlist', chosen: 'Our choice' }
@@ -36,12 +36,82 @@ export function stayLink(city: string, start?: string, end?: string) {
   return `https://www.booking.com/searchresults.html?${q}`
 }
 
-function Cover({ d, tone }: { d: { name: string; photo?: string }; tone?: string }) {
-  return d.photo ? (
-    <div className="hm-cover" style={{ backgroundImage: `url("${d.photo}")` }} />
-  ) : (
-    <div className={'hm-cover hm-cover-plain tone-' + (tone ?? 'sky')}>
-      <span>{d.name}</span>
+const WIKI_KEY = 'wp-wiki-photos'
+const wikiCache: Record<string, string> = (() => {
+  try {
+    return JSON.parse(localStorage.getItem(WIKI_KEY) ?? '{}')
+  } catch {
+    return {}
+  }
+})()
+const wikiPending = new Map<string, Promise<string>>()
+
+/** A landscape photo for a place, from the Wikipedia article's images. Empty when none is found. */
+export function wikiPhoto(title: string): Promise<string> {
+  if (title in wikiCache) return Promise.resolve(wikiCache[title])
+  const hit = wikiPending.get(title)
+  if (hit) return hit
+  const api = 'https://en.wikipedia.org/api/rest_v1/page/'
+  const t = encodeURIComponent(title.replace(/ /g, '_'))
+  const isPhoto = (u?: string) => !!u && /\.(jpe?g|png|webp)$/i.test(u.split('?')[0]) && !/flag|map|locator|coat_of_arms|logo/i.test(u)
+  const job = (async () => {
+    let url = ''
+    try {
+      const r = await fetch(api + 'summary/' + t)
+      if (r.ok) {
+        const d = await r.json()
+        const o = d.originalimage
+        if (isPhoto(o?.source)) url = o.width > 1280 && d.thumbnail?.source ? d.thumbnail.source.replace(/\/\d+px-/, '/1280px-') : o.source
+      }
+      if (!url) {
+        const m = await fetch(api + 'media-list/' + t)
+        if (m.ok) {
+          const d = await m.json()
+          for (const it of d.items ?? []) {
+            const src: string | undefined = it.srcset?.[it.srcset.length - 1]?.src
+            if (it.type === 'image' && isPhoto(it.title) && src) {
+              url = src.startsWith('//') ? 'https:' + src : src
+              break
+            }
+          }
+        }
+      }
+    } catch {
+      return '' // offline: try again next time
+    }
+    wikiCache[title] = url
+    try {
+      localStorage.setItem(WIKI_KEY, JSON.stringify(wikiCache))
+    } catch {
+      /* ignore */
+    }
+    return url
+  })()
+  wikiPending.set(title, job)
+  return job
+}
+
+function useWikiPhoto(title?: string) {
+  const [url, setUrl] = useState(title ? wikiCache[title] ?? '' : '')
+  useEffect(() => {
+    if (!title) return
+    let live = true
+    wikiPhoto(title).then((u) => live && setUrl(u))
+    return () => {
+      live = false
+    }
+  }, [title])
+  return url
+}
+
+const wikiFor = (name: string) => PROPOSALS.find((p) => p.name === name)?.wiki ?? name
+
+function Cover({ d, tone, lookup }: { d: { name: string; photo?: string }; tone?: string; lookup?: string }) {
+  const auto = useWikiPhoto(d.photo ? undefined : lookup)
+  const src = d.photo || auto
+  return (
+    <div className={'hm-cover tone-' + (tone ?? 'sky') + (src ? ' has-photo' : ' hm-cover-plain')} style={src ? { backgroundImage: `url("${src}")` } : undefined}>
+      {!src && <span>{d.name}</span>}
     </div>
   )
 }
@@ -61,16 +131,31 @@ function Stars({ value, onChange, label }: { value?: number; onChange: (v: numbe
 function PhotoField({ value, onChange }: { value?: string; onChange: (v?: string) => void }) {
   const { t } = useI18n()
   const ref = useRef<HTMLInputElement>(null)
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
+  const isLink = !!value && /^https?:/.test(value)
   return (
-    <div className="row-gap">
-      <button type="button" className="btn small" onClick={() => ref.current?.click()}>
-        {value ? t('Change photo') : t('Add photo')}
-      </button>
-      {value && (
-        <button type="button" className="btn small ghost" onClick={() => onChange(undefined)}>
-          {t('Remove')}
+    <div className="photo-field">
+      {value && <div className="photo-preview" style={{ backgroundImage: `url("${value}")` }} />}
+      <div className="row-gap">
+        <button type="button" className="btn small" disabled={busy} onClick={() => ref.current?.click()}>
+          {busy ? t('Adding…') : value ? t('Change photo') : t('Add photo')}
         </button>
-      )}
+        {value && (
+          <button type="button" className="btn small ghost" onClick={() => onChange(undefined)}>
+            {t('Remove')}
+          </button>
+        )}
+      </div>
+      <input
+        className="input"
+        type="url"
+        inputMode="url"
+        placeholder={t('…or paste a photo link')}
+        value={isLink ? value : ''}
+        onChange={(ev) => onChange(ev.target.value.trim() || undefined)}
+      />
+      {err && <div className="small" style={{ color: 'var(--rose-ink, #a0524f)' }}>{err}</div>}
       <input
         ref={ref}
         type="file"
@@ -79,7 +164,16 @@ function PhotoField({ value, onChange }: { value?: string; onChange: (v?: string
         onChange={async (ev) => {
           const f = ev.target.files?.[0]
           ev.target.value = ''
-          if (f) onChange(await resizeImage(f, 1200, 0.8))
+          if (!f) return
+          setBusy(true)
+          setErr('')
+          try {
+            onChange(await resizeImage(f, 1000, 0.75))
+          } catch {
+            setErr(t('That photo could not be read. Try a screenshot of it, or paste a link.'))
+          } finally {
+            setBusy(false)
+          }
         }}
       />
     </div>
@@ -90,7 +184,7 @@ function PhotoField({ value, onChange }: { value?: string; onChange: (v?: string
 function useEditor<K extends 'hmDest' | 'hmFlight' | 'hmStay' | 'hmExpense'>(kind: K, isValid: (d: Row<K>['data']) => boolean) {
   const { add, update, remove } = useStore()
   const [editing, setEditing] = useState<{ row?: Row<K>; data: Row<K>['data'] } | null>(null)
-  const set = (p: Partial<Row<K>['data']>) => editing && setEditing({ ...editing, data: { ...editing.data, ...p } })
+  const set = (p: Partial<Row<K>['data']>) => setEditing((cur) => (cur ? { ...cur, data: { ...cur.data, ...p } } : cur))
   const save = async () => {
     if (!editing || !isValid(editing.data)) return
     if (editing.row) await update(editing.row, editing.data)
@@ -227,7 +321,7 @@ function Ideas() {
             <div className="hm-grid">
               {rows.map((d) => (
                 <div key={d.id} className={'card hm-card' + (st === 'chosen' ? ' chosen' : '')} onClick={() => ed.setEditing({ row: d, data: { ...d.data } })}>
-                  <Cover d={d.data} tone={PROPOSALS.find((p) => p.name === d.data.name)?.tone} />
+                  <Cover d={d.data} tone={PROPOSALS.find((p) => p.name === d.data.name)?.tone} lookup={wikiFor(d.data.name)} />
                   <div className="hm-body">
                     <div className="eyebrow">{t(d.data.country ?? '')}</div>
                     <h3>{t(d.data.name)}</h3>
@@ -263,7 +357,7 @@ function Ideas() {
       <div className="hm-grid">
         {PROPOSALS.filter((p) => !dests.some((d) => d.data.name === p.name)).map((p) => (
           <div key={p.name} className="card hm-card">
-            <Cover d={p} tone={p.tone} />
+            <Cover d={p} tone={p.tone} lookup={p.wiki} />
             <div className="hm-body">
               <div className="eyebrow">{t(p.country!)}</div>
               <h3>{t(p.name)}</h3>
@@ -274,10 +368,11 @@ function Ideas() {
               <button
                 className="btn small"
                 style={{ marginTop: 10 }}
-                onClick={() => {
-                  const { tone: _tone, ...rest } = p
+                onClick={async () => {
+                  const { tone: _tone, wiki, ...rest } = p
                   void _tone
-                  add('hmDest', { ...rest, status: 'idea' })
+                  const photo = await wikiPhoto(wiki)
+                  add('hmDest', { ...rest, ...(photo ? { photo } : {}), status: 'idea' })
                 }}
               >
                 + {t('Add to our ideas')}
