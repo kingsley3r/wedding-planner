@@ -584,6 +584,8 @@ main.content { min-width: 0; }
 .hm-cover-plain { display: flex; align-items: flex-end; padding: 14px 16px; background: linear-gradient(140deg, var(--tone-soft), var(--tone)); }
 .hm-cover { position: relative; display: flex; align-items: flex-end; padding: 14px 16px; background-color: var(--tone-soft); }
 .hm-cover span { position: relative; }
+.hm-cover { overflow: hidden; }
+.hm-cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .hm-cover span { font-family: var(--serif); font-size: 30px; color: #fff; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.18); line-height: 1.05; }
 .hm-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 4px; }
 .hm-body h3 { font-family: var(--serif); font-weight: 500; font-size: 24px; }

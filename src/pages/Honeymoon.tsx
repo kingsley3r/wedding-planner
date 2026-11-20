@@ -7,8 +7,8 @@ import { fmtDate, money, num, resizeImage } from '../lib/util'
 import { Bar, Empty, Fab, Field, PageHead, Sheet, Text } from '../components/ui'
 
 /** Places that suit a honeymoon in mid to late August, leaving from Austria. Rough guides only. */
-/** A photo from Wikimedia Commons, by file name, scaled for the cards. */
-const commons = (file: string) => `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file.replace(/ /g, '_'))}?width=1200`
+/** A photo from Wikimedia Commons, by file name, served through the app's own /api/photo so phones load it reliably. */
+const commons = (file: string) => `/api/photo?file=${encodeURIComponent(file)}`
 
 export const PROPOSALS: (Omit<HmDest, 'status'> & { tone: string; photo: string })[] = [
   { name: 'Madeira', photo: commons('Cabo Girao (14445974645).jpg'), country: 'Portugal', airport: 'FNC', flightHours: 4, estCost: 3800, weather: '24–26°, mild and sunny', why: 'Cliffs, levada walks, ocean pools and quiet boutique hotels. Not too hot in August.', tone: 'sage' },
@@ -42,14 +42,17 @@ export function stayLink(city: string, start?: string, end?: string) {
 /** Suggested places use their hand-picked photo. Older saves kept an automatic Wikipedia photo, which is replaced here. */
 const photoFor = (d: { name: string; photo?: string }) => {
   const p = PROPOSALS.find((x) => x.name === d.name)
-  return p && (!d.photo || d.photo.startsWith('https://upload.wikimedia.org/')) ? p.photo : d.photo
+  return p && (!d.photo || /^https:\/\/(upload|commons)\.wikimedia\.org\//.test(d.photo)) ? p.photo : d.photo
 }
 
 function Cover({ d, tone }: { d: { name: string; photo?: string }; tone?: string }) {
   const src = photoFor(d)
+  const [failed, setFailed] = useState('')
+  const show = src && failed !== src
   return (
-    <div className={'hm-cover tone-' + (tone ?? 'sky') + (src ? ' has-photo' : ' hm-cover-plain')} style={src ? { backgroundImage: `url("${src}")` } : undefined}>
-      {!src && <span>{d.name}</span>}
+    <div className={'hm-cover tone-' + (tone ?? 'sky') + (show ? ' has-photo' : ' hm-cover-plain')}>
+      {show && <img src={src} alt="" loading="lazy" onError={() => setFailed(src)} />}
+      {!show && <span>{d.name}</span>}
     </div>
   )
 }
