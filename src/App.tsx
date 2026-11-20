@@ -27,6 +27,11 @@ import Contacts from './pages/Contacts'
 import Stays from './pages/Stays'
 import Program from './pages/Program'
 import Helper from './pages/Helper'
+import Packing from './pages/Packing'
+import Shots from './pages/Shots'
+import Decisions from './pages/Decisions'
+import Weather from './pages/Weather'
+import Honeymoon from './pages/Honeymoon'
 
 /** Flat list of every page, kept for anything that needs all pages in order. */
 export const NAV = GROUPS.flatMap((g) => g.pages)
@@ -118,7 +123,7 @@ function Shell() {
         {ready && group.pages.length > 1 && group.id !== 'more' && (
           <nav className={'subnav tone-' + group.tone}>
             {group.pages.map((p) => (
-              <NavLink key={p.to} to={p.to}>
+              <NavLink key={p.to} to={p.to} end>
                 <Icon name={p.icon} size={16} />
                 {t(p.label)}
               </NavLink>
@@ -140,6 +145,12 @@ function Shell() {
             <Route path="/program" element={<Program />} />
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/stays" element={<Stays />} />
+            <Route path="/packing" element={<Packing />} />
+            <Route path="/shots" element={<Shots />} />
+            <Route path="/decisions" element={<Decisions />} />
+            <Route path="/weather" element={<Weather />} />
+            <Route path="/honeymoon" element={<Honeymoon />} />
+            <Route path="/honeymoon/:tab" element={<Honeymoon />} />
             <Route path="/print" element={<Print />} />
             <Route path="/print/:doc" element={<Print />} />
             <Route path="/settings" element={<Settings />} />
@@ -149,8 +160,8 @@ function Shell() {
         )}
       </main>
       <nav className="tabbar">
-        {GROUPS.map((g) => (
-          <NavLink key={g.id} to={g.id === 'more' ? '/more' : g.pages[0].to} end={g.id === 'home'} className={'tone-' + g.tone + (group.id === g.id ? ' active' : '')}>
+        {GROUPS.filter((g) => !g.noTab).map((g) => (
+          <NavLink key={g.id} to={g.id === 'more' ? '/more' : g.pages[0].to} end={g.id === 'home'} className={'tone-' + g.tone + (group.id === g.id || (group.noTab && g.id === 'more') ? ' active' : '')}>
             <span className="tab-icon">
               <Icon name={g.icon} size={21} />
               {g.id === 'money' && dueCount > 0 && <b className="dot" />}

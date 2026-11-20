@@ -5,6 +5,7 @@ import { allPayments, downloadFile } from '../lib/payments'
 import { fmtDate, money } from '../lib/util'
 import { addMinutes, ceremonyStart } from '../pages/Program'
 import { ROLE_LABEL } from '../pages/Contacts'
+import { MOMENTS } from '../pages/Shots'
 
 export interface DocMeta {
   id: string
@@ -23,11 +24,15 @@ export const DOCS: DocMeta[] = [
   { id: 'stays', group: 'Guests', title: 'Accommodation', desc: 'Hotels and who sleeps where' },
   { id: 'schedule', group: 'The day', title: 'Day-of schedule', desc: 'The run sheet for helpers and vendors' },
   { id: 'program', group: 'The day', title: 'Church program', desc: 'Order of service in Romanian and German' },
+  { id: 'shots-photo', group: 'The day', title: 'Shot list for the photographer', desc: 'Every photo you want, by moment' },
+  { id: 'shots-video', group: 'The day', title: 'Shot list for the videographer', desc: 'Every scene you want filmed, by moment' },
+  { id: 'packing', group: 'The day', title: 'Packing list', desc: 'What goes in which bag' },
   { id: 'contacts', group: 'The day', title: 'Contacts sheet', desc: 'Helpers, family, church, vendors and venues' },
   { id: 'vendors', group: 'Planning', title: 'Vendor contacts', desc: 'Names, phone numbers and status' },
   { id: 'budget', group: 'Planning', title: 'Budget and payments', desc: 'Every expense and payment date' },
   { id: 'bva', group: 'Planning', title: 'Budget vs actual', desc: 'Planned and actual per category, and what is still owed' },
   { id: 'checklist', group: 'Planning', title: 'Checklist', desc: 'Open and finished tasks' },
+  { id: 'decisions', group: 'Planning', title: 'Decision log', desc: 'What you decided, when and why' },
   { id: 'tasks', group: 'Planning', title: 'Tasks by person', desc: 'Open tasks grouped by who does them' }
 ]
 
@@ -529,6 +534,81 @@ export function renderDoc(doc: string, { list, t, lang }: DocCtx): { body: React
           )
         })}
       </div>
+    )
+  } else if (doc === 'packing') {
+    const items = list('pack')
+    const groups = [...new Set(items.map((i) => i.data.group))]
+    body = (
+      <div className="doc-tables">
+        {groups.map((g) => (
+          <div key={g} className="doc-tablecard">
+            <h3>{t(g)}</h3>
+            <ul className="doc-tasks">
+              {items
+                .filter((i) => i.data.group === g)
+                .map((i) => (
+                  <li key={i.id}>
+                    {i.data.packed ? '☑' : '☐'} {t(i.data.item)}
+                    {i.data.who && <span className="muted"> · {i.data.who}</span>}
+                  </li>
+                ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    )
+  } else if (doc === 'shots-photo' || doc === 'shots-video') {
+    const kind = doc === 'shots-photo' ? 'photo' : 'video'
+    const shots = list('shot').filter((s) => s.data.for === kind || s.data.for === 'both')
+    const moments = [...new Set([...MOMENTS, ...shots.map((s) => s.data.moment)])]
+    exportCsv = () => downloadFile(`shot-list-${kind}.csv`, csv([['Moment', 'Shot', 'Must-have', 'People', 'Notes'], ...shots.map((s) => [s.data.moment, s.data.title, s.data.must ? 'yes' : '', s.data.people, s.data.notes])]), 'text/csv')
+    body = (
+      <>
+        <p className="doc-sub">{t('★ = must-have')}</p>
+        {moments.map((m) => {
+          const rows = shots.filter((s) => s.data.moment === m)
+          if (!rows.length) return null
+          return (
+            <div key={m}>
+              <h2 className="doc-h2">{t(m)}</h2>
+              <table className="doc-table">
+                <tbody>
+                  {rows.map((s) => (
+                    <tr key={s.id}>
+                      <td style={{ width: 28 }}>☐</td>
+                      <td>
+                        {s.data.must && <b>★ </b>}
+                        {t(s.data.title)}
+                        {s.data.notes && <div className="muted">{s.data.notes}</div>}
+                      </td>
+                      <td>{s.data.people}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
+        })}
+      </>
+    )
+  } else if (doc === 'decisions') {
+    const rows = list('decision').sort((a, b) => b.data.date.localeCompare(a.data.date))
+    exportCsv = () => downloadFile('decisions.csv', csv([['Date', 'Topic', 'Decision', 'Why', 'Also considered', 'Decided by'], ...rows.map((r) => [r.data.date, r.data.title, r.data.decision, r.data.why, r.data.options, r.data.by])]), 'text/csv')
+    body = (
+      <table className="doc-table">
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.id}>
+              <td style={{ width: 110 }}>{fmtDate(r.data.date, lang)}</td>
+              <td>
+                <b>{r.data.title}</b>: {r.data.decision}
+                {r.data.why && <div className="muted">{r.data.why}</div>}
+              </td>
+              <td>{r.data.by}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     )
   }
   return { body, exportCsv }

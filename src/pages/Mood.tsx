@@ -49,6 +49,14 @@ function useBoardFeed(board?: string): Feed {
   return feed
 }
 
+const hostOf = (u: string) => {
+  try {
+    return new URL(u).hostname.replace(/^www\./, '')
+  } catch {
+    return ''
+  }
+}
+
 export default function Mood() {
   const { t } = useI18n()
   const { list, add, update, remove, settings, saveSettings } = useStore()
@@ -58,6 +66,8 @@ export default function Mood() {
   const [filter, setFilter] = useState<string>('all')
   const [editing, setEditing] = useState<{ row?: Row<'mood'>; data: MoodItem } | null>(null)
   const [linkOpen, setLinkOpen] = useState(false)
+  const [linkTitle, setLinkTitle] = useState('')
+  const [idea, setIdea] = useState<{ title: string; notes: string } | null>(null)
   const [link, setLink] = useState('')
   const [boardDraft, setBoardDraft] = useState('')
   const [showBoard, setShowBoard] = useState(false)
@@ -100,14 +110,30 @@ export default function Mood() {
   const addLink = async () => {
     const v = link.trim()
     if (!/^https?:\/\//i.test(v)) return alert(t('Please paste a link that starts with https://'))
+    const isImage = /\.(jpe?g|png|webp|gif|avif)(\?|$)/i.test(v) || /pinimg\.com|images\.unsplash\.com/i.test(v)
     await add('mood', {
-      kind: isPinterestUrl(v) ? 'pin' : 'image',
+      kind: isPinterestUrl(v) && /\/pin\//.test(v) ? 'pin' : isImage ? 'image' : 'link',
       src: v,
+      title: linkTitle.trim() || undefined,
       category: filter !== 'all' && filter !== 'fav' ? filter : 'Other',
       favorite: filter === 'fav'
     })
     setLink('')
+    setLinkTitle('')
     setLinkOpen(false)
+  }
+
+  const saveIdea = async () => {
+    if (!idea || !(idea.title.trim() || idea.notes.trim())) return
+    await add('mood', {
+      kind: 'idea',
+      src: '',
+      title: idea.title.trim() || undefined,
+      notes: idea.notes.trim() || undefined,
+      category: filter !== 'all' && filter !== 'fav' ? filter : 'Other',
+      favorite: filter === 'fav'
+    })
+    setIdea(null)
   }
 
   const e = editing?.data
@@ -116,6 +142,9 @@ export default function Mood() {
   return (
     <>
       <PageHead eyebrow={t('{n} favourites', { n: items.filter((i) => i.data.favorite).length })} title={t('Mood board')}>
+        <button className="btn" onClick={() => setIdea({ title: '', notes: '' })}>
+          {t('Write an idea')}
+        </button>
         <button className="btn" onClick={() => setLinkOpen(true)}>
           {t('Add link')}
         </button>
@@ -258,12 +287,24 @@ export default function Mood() {
                     {t('Open in Pinterest')} ↗
                   </a>
                 </div>
+              ) : m.data.kind === 'idea' ? (
+                <div className="mood-idea" onClick={() => setEditing({ row: m, data: { ...m.data } })}>
+                  <div className="eyebrow">{t('Idea')}</div>
+                  {m.data.title && <h4>{m.data.title}</h4>}
+                  {m.data.notes && <p>{m.data.notes}</p>}
+                </div>
+              ) : m.data.kind === 'link' ? (
+                <a className="mood-link" href={m.data.src} target="_blank" rel="noreferrer">
+                  <div className="eyebrow">{hostOf(m.data.src)}</div>
+                  <h4>{m.data.title || m.data.src}</h4>
+                  <span className="small">{t('Open link')} ↗</span>
+                </a>
               ) : (
                 <img src={m.data.src} alt={m.data.title ?? ''} loading="lazy" referrerPolicy="no-referrer" onClick={() => setEditing({ row: m, data: { ...m.data } })} />
               )}
               <div className="mood-meta">
                 <button className="grow mood-title" onClick={() => setEditing({ row: m, data: { ...m.data } })}>
-                  {m.data.title || t(m.data.category)}
+                  {m.data.kind === 'idea' || m.data.kind === 'link' ? t(m.data.category) : m.data.title || t(m.data.category)}
                 </button>
                 <button
                   className={'heart' + (m.data.favorite ? ' on' : '')}
@@ -280,12 +321,30 @@ export default function Mood() {
 
       {linkOpen && (
         <Sheet title={t('Add link')} onClose={() => setLinkOpen(false)} onSave={addLink}>
-          <Field label={t('Image or Pinterest pin link')}>
-            <Text value={link} onChange={setLink} type="url" placeholder="https://www.pinterest.com/pin/…" autoFocus required />
-          </Field>
+          <div className="form">
+            <Field label={t('Link')} full>
+              <Text value={link} onChange={setLink} type="url" placeholder="https://…" autoFocus required />
+            </Field>
+            <Field label={t('Title')} full>
+              <Text value={linkTitle} onChange={setLinkTitle} placeholder={t('e.g. Florist we liked')} />
+            </Field>
+          </div>
           <p className="small muted" style={{ marginTop: 8 }}>
-            {t('Works best with the full pin link (pinterest.com/pin/…).')}
+            {t('Any link works: a Pinterest pin, an image, a shop or a video. Pins and images show as pictures.')}
           </p>
+        </Sheet>
+      )}
+
+      {idea && (
+        <Sheet title={t('Write an idea')} onClose={() => setIdea(null)} onSave={saveIdea}>
+          <div className="form">
+            <Field label={t('Title')} full>
+              <Text value={idea.title} onChange={(v) => setIdea({ ...idea, title: v })} autoFocus placeholder={t('e.g. Candles on every table')} />
+            </Field>
+            <Field label={t('Idea')} full>
+              <textarea className="input" style={{ minHeight: 120 }} value={idea.notes} onChange={(ev) => setIdea({ ...idea, notes: ev.target.value })} />
+            </Field>
+          </div>
         </Sheet>
       )}
 

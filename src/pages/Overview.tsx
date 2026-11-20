@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
 import { useI18n } from '../lib/i18n'
 import { useStore } from '../lib/store'
-import { daysUntil, fmtDate, money, todayIso } from '../lib/util'
+import { fmtDate, money, todayIso } from '../lib/util'
 import { Bar } from '../components/ui'
+import { Countdown } from '../components/Countdown'
+import { ceremonyStart } from './Program'
 import { allPayments, duePayments } from '../lib/payments'
 
 export default function Overview() {
@@ -14,6 +16,8 @@ export default function Overview() {
   const tasks = list('task')
   const vendors = list('vendor')
   const venues = list('venue')
+  const chosen = list('hmDest').find((d) => d.data.status === 'chosen')
+  const hmIdeas = list('hmDest').length
 
   const attending = guests.filter((g) => g.data.rsvp === 'attending').length
   const awaiting = guests.filter((g) => g.data.rsvp === 'invited' || g.data.rsvp === 'pending').length
@@ -24,7 +28,6 @@ export default function Overview() {
   const weekAhead = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10)
   const dueSoon = tasks.filter((x) => !x.data.done && x.data.dueDate && x.data.dueDate <= weekAhead).length
   const booked = vendors.filter((v) => v.data.status === 'booked').length
-  const days = daysUntil(s.date)
   const hour = new Date().getHours()
   const greeting = hour < 12 ? t('Good morning') : hour < 18 ? t('Good afternoon') : t('Good evening')
 
@@ -78,10 +81,7 @@ export default function Overview() {
             {t('in one quiet place.')}
           </h1>
         </div>
-        <div className="countdown">
-          <b>{Math.max(0, days)}</b>
-          <span>{days > 0 ? t('days to go') : days === 0 ? t('today is the day') : t('days since')}</span>
-        </div>
+        <Countdown date={s.date} time={ceremonyStart(venues, list('schedule'))} />
       </div>
 
       <div className="stats">
@@ -122,6 +122,16 @@ export default function Overview() {
           <Bar value={booked / (vendors.length || 1)} tone="rose" />
         </Link>
       </div>
+
+      <Link to="/honeymoon" className="card hm-home" style={{ textDecoration: 'none' }}>
+        <div>
+          <div className="eyebrow">{t('Honeymoon')}</div>
+          <div className="serif" style={{ fontSize: 26 }}>
+            {chosen ? t(chosen.data.name) : hmIdeas ? t('{n} places on your list', { n: hmIdeas }) : t('Where shall we go?')}
+          </div>
+        </div>
+        <span>›</span>
+      </Link>
 
       <div className="grid2">
         <div className="card">

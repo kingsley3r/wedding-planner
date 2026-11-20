@@ -96,8 +96,8 @@ export interface Note {
 }
 
 export interface MoodItem {
-  /** An image (data URL or web address) or a Pinterest pin link. */
-  kind: 'image' | 'pin'
+  /** An image (data URL or web address), a Pinterest pin link, a written idea or a web link. */
+  kind: 'image' | 'pin' | 'idea' | 'link'
   src: string
   title?: string
   category: string
@@ -157,6 +157,91 @@ export interface Settings {
   helperToken?: string
   /** Skip the opening animation. */
   introOff?: boolean
+  honeymoonBudget?: number
+  honeymoonStart?: string
+  honeymoonEnd?: string
+  /** Where you fly from, e.g. VIE or GRZ */
+  homeAirport?: string
+}
+
+export interface PackItem {
+  item: string
+  /** Which bag or group: Bride, Groom, Rings & documents… */
+  group: string
+  who?: string
+  packed: boolean
+}
+
+export type ShotFor = 'photo' | 'video' | 'both'
+export interface Shot {
+  title: string
+  moment: string
+  for: ShotFor
+  people?: string
+  notes?: string
+  must?: boolean
+  done?: boolean
+}
+
+export interface Decision {
+  title: string
+  date: string
+  decision: string
+  why?: string
+  options?: string
+  by?: string
+  area?: string
+}
+
+export type HmStatus = 'idea' | 'shortlist' | 'chosen'
+export interface HmDest {
+  name: string
+  country?: string
+  /** Airport code for flight searches, e.g. FNC */
+  airport?: string
+  photo?: string
+  status: HmStatus
+  estCost?: number
+  flightHours?: number
+  weather?: string
+  why?: string
+  notes?: string
+  link?: string
+  rating1?: number
+  rating2?: number
+}
+export interface HmFlight {
+  destId?: string
+  airline: string
+  from?: string
+  to?: string
+  depart?: string
+  back?: string
+  /** For both of you, EUR */
+  price: number
+  stops?: number
+  hours?: number
+  link?: string
+  chosen?: boolean
+}
+export interface HmStay {
+  destId?: string
+  name: string
+  city?: string
+  link?: string
+  photo?: string
+  pricePerNight?: number
+  nights?: number
+  /** Review score out of 10 */
+  score?: number
+  reviews?: string
+  chosen?: boolean
+}
+export interface HmExpense {
+  label: string
+  category: string
+  amount: number
+  paid?: boolean
 }
 
 /** A photo of the couple for the opening animation. */
@@ -179,6 +264,13 @@ export interface KindMap {
   stay: Stay
   program: ProgramItem
   photo: Photo
+  pack: PackItem
+  hmDest: HmDest
+  hmFlight: HmFlight
+  hmStay: HmStay
+  hmExpense: HmExpense
+  shot: Shot
+  decision: Decision
   settings: Settings
 }
 export type Kind = keyof KindMap
