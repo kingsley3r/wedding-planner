@@ -13,6 +13,8 @@ export interface NavGroup {
   icon: string
   tone: Tone
   pages: NavPage[]
+  /** Left out of the phone tab bar (reached from Home and More). */
+  noTab?: boolean
 }
 
 /** Every page, grouped by what belongs together. The first page of a group is where its tab leads. */
@@ -68,6 +70,20 @@ export const GROUPS: NavGroup[] = [
       { to: '/mood', label: 'Mood board', icon: 'mood' },
       { to: '/decisions', label: 'Decision log', icon: 'decisions' },
       { to: '/notes', label: 'Notes', icon: 'notes' }
+    ]
+  },
+  {
+    id: 'honeymoon',
+    label: 'Honeymoon',
+    title: 'Honeymoon',
+    icon: 'plane',
+    tone: 'rose',
+    noTab: true,
+    pages: [
+      { to: '/honeymoon', label: 'Ideas', icon: 'plane' },
+      { to: '/honeymoon/flights', label: 'Flights', icon: 'plane' },
+      { to: '/honeymoon/stays', label: 'Hotels', icon: 'stays' },
+      { to: '/honeymoon/budget', label: 'Costs', icon: 'budget' }
     ]
   },
   {

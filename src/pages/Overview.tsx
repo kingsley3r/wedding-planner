@@ -16,6 +16,8 @@ export default function Overview() {
   const tasks = list('task')
   const vendors = list('vendor')
   const venues = list('venue')
+  const chosen = list('hmDest').find((d) => d.data.status === 'chosen')
+  const hmIdeas = list('hmDest').length
 
   const attending = guests.filter((g) => g.data.rsvp === 'attending').length
   const awaiting = guests.filter((g) => g.data.rsvp === 'invited' || g.data.rsvp === 'pending').length
@@ -120,6 +122,16 @@ export default function Overview() {
           <Bar value={booked / (vendors.length || 1)} tone="rose" />
         </Link>
       </div>
+
+      <Link to="/honeymoon" className="card hm-home" style={{ textDecoration: 'none' }}>
+        <div>
+          <div className="eyebrow">{t('Honeymoon')}</div>
+          <div className="serif" style={{ fontSize: 26 }}>
+            {chosen ? t(chosen.data.name) : hmIdeas ? t('{n} places on your list', { n: hmIdeas }) : t('Where shall we go?')}
+          </div>
+        </div>
+        <span>›</span>
+      </Link>
 
       <div className="grid2">
         <div className="card">
