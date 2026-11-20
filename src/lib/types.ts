@@ -96,8 +96,8 @@ export interface Note {
 }
 
 export interface MoodItem {
-  /** An image (data URL or web address) or a Pinterest pin link. */
-  kind: 'image' | 'pin'
+  /** An image (data URL or web address), a Pinterest pin link, a written idea or a web link. */
+  kind: 'image' | 'pin' | 'idea' | 'link'
   src: string
   title?: string
   category: string
@@ -159,6 +159,35 @@ export interface Settings {
   introOff?: boolean
 }
 
+export interface PackItem {
+  item: string
+  /** Which bag or group: Bride, Groom, Rings & documents… */
+  group: string
+  who?: string
+  packed: boolean
+}
+
+export type ShotFor = 'photo' | 'video' | 'both'
+export interface Shot {
+  title: string
+  moment: string
+  for: ShotFor
+  people?: string
+  notes?: string
+  must?: boolean
+  done?: boolean
+}
+
+export interface Decision {
+  title: string
+  date: string
+  decision: string
+  why?: string
+  options?: string
+  by?: string
+  area?: string
+}
+
 /** A photo of the couple for the opening animation. */
 export interface Photo {
   src: string
@@ -179,6 +208,9 @@ export interface KindMap {
   stay: Stay
   program: ProgramItem
   photo: Photo
+  pack: PackItem
+  shot: Shot
+  decision: Decision
   settings: Settings
 }
 export type Kind = keyof KindMap

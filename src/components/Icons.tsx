@@ -123,6 +123,36 @@ const P: Record<string, ReactNode> = {
       <path d="m9 14.5 2 2 4-4" />
     </>
   ),
+  packing: (
+    <>
+      <rect x="4" y="7.5" width="16" height="12.5" rx="2.5" />
+      <path d="M9 7.5V5.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5.5v2" />
+      <path d="M4 12.5h16" />
+      <path d="M11 12.5v2h2v-2" />
+    </>
+  ),
+  shots: (
+    <>
+      <path d="M4 8.5h3l1.5-2.5h7L17 8.5h3v10.5H4z" />
+      <circle cx="12" cy="13.5" r="3.3" />
+    </>
+  ),
+  decisions: (
+    <>
+      <path d="M12 4v16" />
+      <path d="M5 7h14" />
+      <path d="m5 7-2.5 6a3 3 0 0 0 5 0z" />
+      <path d="m19 7-2.5 6a3 3 0 0 0 5 0z" />
+      <path d="M8.5 20h7" />
+    </>
+  ),
+  weather: (
+    <>
+      <circle cx="9" cy="9" r="3.2" />
+      <path d="M9 2.8v1.4M2.8 9h1.4M4.6 4.6l1 1M13.4 4.6l-1 1" />
+      <path d="M8.5 19.5h9a3.2 3.2 0 0 0 .4-6.4 4.5 4.5 0 0 0-8.6.9 2.8 2.8 0 0 0-.8 5.5z" />
+    </>
+  ),
   more: (
     <>
       <circle cx="6" cy="12" r="1.3" />

@@ -27,6 +27,10 @@ import Contacts from './pages/Contacts'
 import Stays from './pages/Stays'
 import Program from './pages/Program'
 import Helper from './pages/Helper'
+import Packing from './pages/Packing'
+import Shots from './pages/Shots'
+import Decisions from './pages/Decisions'
+import Weather from './pages/Weather'
 
 /** Flat list of every page, kept for anything that needs all pages in order. */
 export const NAV = GROUPS.flatMap((g) => g.pages)
@@ -140,6 +144,10 @@ function Shell() {
             <Route path="/program" element={<Program />} />
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/stays" element={<Stays />} />
+            <Route path="/packing" element={<Packing />} />
+            <Route path="/shots" element={<Shots />} />
+            <Route path="/decisions" element={<Decisions />} />
+            <Route path="/weather" element={<Weather />} />
             <Route path="/print" element={<Print />} />
             <Route path="/print/:doc" element={<Print />} />
             <Route path="/settings" element={<Settings />} />

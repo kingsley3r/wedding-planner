@@ -51,7 +51,10 @@ export const GROUPS: NavGroup[] = [
       { to: '/schedule', label: 'Day-of schedule', icon: 'schedule' },
       { to: '/program', label: 'Church program', icon: 'program' },
       { to: '/venues', label: 'Venues', icon: 'venues' },
-      { to: '/contacts', label: 'Contacts', icon: 'contacts' }
+      { to: '/contacts', label: 'Contacts', icon: 'contacts' },
+      { to: '/shots', label: 'Shot list', icon: 'shots' },
+      { to: '/packing', label: 'Packing list', icon: 'packing' },
+      { to: '/weather', label: 'Weather', icon: 'weather' }
     ]
   },
   {
@@ -63,6 +66,7 @@ export const GROUPS: NavGroup[] = [
     pages: [
       { to: '/checklist', label: 'Checklist', icon: 'checklist' },
       { to: '/mood', label: 'Mood board', icon: 'mood' },
+      { to: '/decisions', label: 'Decision log', icon: 'decisions' },
       { to: '/notes', label: 'Notes', icon: 'notes' }
     ]
   },
