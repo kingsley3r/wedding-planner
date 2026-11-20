@@ -260,5 +260,16 @@ export const de: Record<string, string> = {
   "{done} of {total} done": "{done} von {total} erledigt",
   "{n} booked": "{n} gebucht",
   "{n} of {target} expected": "{n} von {target} erwartet",
-  "{seated} seated · {seats} seats": "{seated} platziert · {seats} Plätze"
+  "{seated} seated · {seats} seats": "{seated} platziert · {seats} Plätze",
+  "Password": "Passwort",
+  "Sign in": "Anmelden",
+  "Signing in…": "Anmeldung…",
+  "Wrong email or password.": "E-Mail oder Passwort falsch.",
+  "This account is not confirmed yet. In Supabase, create the user with \"Auto Confirm User\" ticked.": "Dieses Konto ist noch nicht bestätigt. Lege den Benutzer in Supabase mit „Auto Confirm User\" an.",
+  "Too many emails sent. Wait an hour or sign in with your password.": "Zu viele E-Mails gesendet. Warte eine Stunde oder melde dich mit Passwort an.",
+  "No account for this email yet. Create it in Supabase first.": "Für diese E-Mail gibt es noch kein Konto. Lege es zuerst in Supabase an.",
+  "Email me a sign-in link instead": "Stattdessen Anmeldelink per E-Mail",
+  "Sign in with password instead": "Stattdessen mit Passwort anmelden",
+  "Your email is not on the allowed list. Add it to allowed_users in Supabase.": "Deine E-Mail steht nicht auf der Liste. Füge sie in Supabase zu allowed_users hinzu.",
+  "Cannot reach Supabase. Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel, then redeploy.": "Supabase nicht erreichbar. Prüfe VITE_SUPABASE_URL und VITE_SUPABASE_ANON_KEY in Vercel und deploye neu."
 }

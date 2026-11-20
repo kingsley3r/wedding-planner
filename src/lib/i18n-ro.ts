@@ -260,5 +260,16 @@ export const ro: Record<string, string> = {
   "{done} of {total} done": "{done} din {total} gata",
   "{n} booked": "{n} rezervați",
   "{n} of {target} expected": "{n} din {target} estimați",
-  "{seated} seated · {seats} seats": "{seated} așezați · {seats} locuri"
+  "{seated} seated · {seats} seats": "{seated} așezați · {seats} locuri",
+  "Password": "Parolă",
+  "Sign in": "Autentificare",
+  "Signing in…": "Se autentifică…",
+  "Wrong email or password.": "E-mail sau parolă greșită.",
+  "This account is not confirmed yet. In Supabase, create the user with \"Auto Confirm User\" ticked.": "Contul nu este încă confirmat. În Supabase, creează utilizatorul cu „Auto Confirm User\" bifat.",
+  "Too many emails sent. Wait an hour or sign in with your password.": "Prea multe e-mailuri trimise. Așteaptă o oră sau autentifică-te cu parola.",
+  "No account for this email yet. Create it in Supabase first.": "Nu există încă un cont pentru acest e-mail. Creează-l mai întâi în Supabase.",
+  "Email me a sign-in link instead": "Trimite-mi un link pe e-mail",
+  "Sign in with password instead": "Autentificare cu parolă",
+  "Your email is not on the allowed list. Add it to allowed_users in Supabase.": "E-mailul tău nu este pe listă. Adaugă-l în allowed_users în Supabase.",
+  "Cannot reach Supabase. Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel, then redeploy.": "Supabase nu poate fi accesat. Verifică VITE_SUPABASE_URL și VITE_SUPABASE_ANON_KEY în Vercel, apoi redeploy."
 }
