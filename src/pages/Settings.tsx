@@ -1,13 +1,18 @@
 import { isDemo, resetDemo, signOut, supabase } from '../lib/backend'
 import { useI18n, type Lang } from '../lib/i18n'
 import { useStore } from '../lib/store'
-import { num, uid } from '../lib/util'
+import { num, resizeImage, uid } from '../lib/util'
+import { Intro } from '../components/Intro'
 import { Field, PageHead, Text } from '../components/ui'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 export default function Settings() {
   const { t, lang, setLang } = useI18n()
-  const { settings, saveSettings } = useStore()
+  const { settings, saveSettings, list, add, remove } = useStore()
+  const photos = list('photo').sort((a, b) => a.data.order - b.data.order)
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [busy, setBusy] = useState(false)
+  const [preview, setPreview] = useState(false)
   const s = settings?.data
   const [email, setEmail] = useState('')
   useEffect(() => {
@@ -15,6 +20,20 @@ export default function Settings() {
   }, [])
   const [copied, setCopied] = useState(false)
   if (!s) return null
+  const addPhotos = async (files: FileList | null) => {
+    if (!files?.length) return
+    setBusy(true)
+    try {
+      let order = (photos[photos.length - 1]?.data.order ?? 0) + 1
+      for (const f of Array.from(files).slice(0, Math.max(0, 5 - photos.length))) {
+        await add('photo', { src: await resizeImage(f, 1400, 0.78), order: order++ })
+      }
+    } catch {
+      alert(t('That photo could not be read. Try another one.'))
+    } finally {
+      setBusy(false)
+    }
+  }
   const helperUrl = s.helperToken ? `${location.origin}/helper/${s.helperToken}` : ''
   const newToken = () => saveSettings({ helperToken: (uid() + uid()).replace(/-/g, '').slice(0, 32) })
   const share = async () => {
@@ -60,6 +79,40 @@ export default function Settings() {
           </Field>
         </div>
       </div>
+      <div className="card">
+        <div className="card-head">
+          <h2 className="section">{t('Opening animation')}</h2>
+          <button className="btn small" onClick={() => setPreview(true)}>
+            {t('Preview')}
+          </button>
+        </div>
+        <p className="small muted" style={{ marginBottom: 12 }}>
+          {t('When the app opens, your monogram draws itself. Add up to 5 photos of the two of you and they fade in behind it.')}
+        </p>
+        {photos.length > 0 && (
+          <div className="photo-grid">
+            {photos.map((p) => (
+              <div key={p.id} className="ph" style={{ backgroundImage: `url("${p.data.src}")` }}>
+                <button aria-label={t('Remove')} onClick={() => remove(p.id)}>
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="row-gap">
+          {photos.length < 5 && (
+            <button className="btn small primary" disabled={busy} onClick={() => fileRef.current?.click()}>
+              {busy ? t('Adding…') : t('Add photos')}
+            </button>
+          )}
+          <button className={'chip' + (!s.introOff ? ' on' : '')} onClick={() => saveSettings({ introOff: !s.introOff || undefined })}>
+            {s.introOff ? t('Animation off') : t('Animation on')}
+          </button>
+        </div>
+        <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(ev) => { addPhotos(ev.target.files); ev.target.value = '' }} />
+      </div>
+      {preview && <Intro preview onDone={() => setPreview(false)} />}
       <div className="card">
         <div className="card-head">
           <h2 className="section">{t('Day-of helper link')}</h2>

@@ -103,6 +103,8 @@ export interface MoodItem {
   category: string
   favorite?: boolean
   notes?: string
+  /** For a pin saved from the board: the pin's page on Pinterest. */
+  link?: string
 }
 
 export type ContactRole = 'family' | 'helper' | 'church' | 'other'
@@ -153,6 +155,14 @@ export interface Settings {
   reminderDays?: number
   /** Secret part of the read-only day-of helper link. */
   helperToken?: string
+  /** Skip the opening animation. */
+  introOff?: boolean
+}
+
+/** A photo of the couple for the opening animation. */
+export interface Photo {
+  src: string
+  order: number
 }
 
 export interface KindMap {
@@ -168,6 +178,7 @@ export interface KindMap {
   contact: Contact
   stay: Stay
   program: ProgramItem
+  photo: Photo
   settings: Settings
 }
 export type Kind = keyof KindMap

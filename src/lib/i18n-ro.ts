@@ -441,5 +441,19 @@ export const ro: Record<string, string> = {
   "{n} nights": "{n} nopți",
   "{n} open": "{n} deschise",
   "{n} rooms": "{n} camere",
-  "{n} selected": "{n} selectate"
+  "{n} selected": "{n} selectate",
+  "Animation off": "Animație oprită",
+  "Animation on": "Animație pornită",
+  "Budget & vendors": "Buget și furnizori",
+  "Everything": "Tot",
+  "In the Pinterest app: open the board, tap Share, then Copy link, and paste it here.": "În aplicația Pinterest: deschideți panoul, apăsați Distribuie, apoi Copiază linkul și lipiți-l aici.",
+  "Opening animation": "Animația de deschidere",
+  "Please paste the link to your Pinterest board.": "Lipiți linkul către panoul vostru Pinterest.",
+  "Preview": "Previzualizare",
+  "Tap the heart to keep a pin in your favourites below.": "Apăsați inima ca să păstrați un pin la favorite, mai jos.",
+  "That photo could not be read. Try another one.": "Fotografia nu a putut fi citită. Încercați alta.",
+  "The board is connected but has no pins we can show yet.": "Panoul este conectat, dar încă nu are pini pe care să-i arătăm.",
+  "The pins could not be loaded here. This usually means the board is secret, or the link points to a single pin instead of the board.": "Pinii nu au putut fi încărcați aici. De obicei panoul este secret, sau linkul duce la un singur pin, nu la panou.",
+  "Try Pinterest's own preview": "Încearcă previzualizarea Pinterest",
+  "When the app opens, your monogram draws itself. Add up to 5 photos of the two of you and they fade in behind it.": "Când se deschide aplicația, monograma voastră se desenează singură. Adăugați până la 5 fotografii cu voi doi și vor apărea în spatele ei."
 }

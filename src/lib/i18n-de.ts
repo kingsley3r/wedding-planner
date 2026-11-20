@@ -441,5 +441,19 @@ export const de: Record<string, string> = {
   "{n} nights": "{n} Nächte",
   "{n} open": "{n} offen",
   "{n} rooms": "{n} Zimmer",
-  "{n} selected": "{n} ausgewählt"
+  "{n} selected": "{n} ausgewählt",
+  "Animation off": "Animation aus",
+  "Animation on": "Animation an",
+  "Budget & vendors": "Budget & Dienstleister",
+  "Everything": "Alles",
+  "In the Pinterest app: open the board, tap Share, then Copy link, and paste it here.": "In der Pinterest-App: Pinnwand öffnen, auf Teilen tippen, dann Link kopieren und hier einfügen.",
+  "Opening animation": "Start-Animation",
+  "Please paste the link to your Pinterest board.": "Bitte fügt den Link zu eurer Pinterest-Pinnwand ein.",
+  "Preview": "Vorschau",
+  "Tap the heart to keep a pin in your favourites below.": "Tippt auf das Herz, um einen Pin unten in euren Favoriten zu behalten.",
+  "That photo could not be read. Try another one.": "Dieses Foto konnte nicht gelesen werden. Versucht ein anderes.",
+  "The board is connected but has no pins we can show yet.": "Die Pinnwand ist verbunden, hat aber noch keine Pins, die wir zeigen können.",
+  "The pins could not be loaded here. This usually means the board is secret, or the link points to a single pin instead of the board.": "Die Pins konnten hier nicht geladen werden. Meist ist die Pinnwand geheim, oder der Link zeigt auf einen einzelnen Pin statt auf die Pinnwand.",
+  "Try Pinterest's own preview": "Pinterest-Vorschau versuchen",
+  "When the app opens, your monogram draws itself. Add up to 5 photos of the two of you and they fade in behind it.": "Beim Öffnen der App zeichnet sich euer Monogramm. Fügt bis zu 5 Fotos von euch beiden hinzu, sie blenden dahinter ein."
 }

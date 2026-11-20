@@ -27,6 +27,28 @@ function PinEmbed({ html, className }: { html: string; className?: string }) {
   return <div className={className} dangerouslySetInnerHTML={{ __html: html }} />
 }
 
+type Feed = { state: 'idle' | 'loading' | 'error' } | { state: 'ok'; pins: { link: string; title: string; image: string }[]; board?: string }
+
+/** Pins from the board's public feed, read through our /api/pinterest function. */
+function useBoardFeed(board?: string): Feed {
+  const [feed, setFeed] = useState<Feed>({ state: 'idle' })
+  useEffect(() => {
+    if (!board) return setFeed({ state: 'idle' })
+    let live = true
+    setFeed({ state: 'loading' })
+    fetch('/api/pinterest?url=' + encodeURIComponent(board))
+      .then(async (r) => {
+        const j = r.ok && /json/.test(r.headers.get('content-type') ?? '') ? await r.json() : null
+        if (live) setFeed(j?.pins ? { state: 'ok', pins: j.pins, board: j.board } : { state: 'error' })
+      })
+      .catch(() => live && setFeed({ state: 'error' }))
+    return () => {
+      live = false
+    }
+  }, [board])
+  return feed
+}
+
 export default function Mood() {
   const { t } = useI18n()
   const { list, add, update, remove, settings, saveSettings } = useStore()
@@ -41,6 +63,7 @@ export default function Mood() {
   const [showBoard, setShowBoard] = useState(false)
   const [busy, setBusy] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+  const feed = useBoardFeed(board)
 
   const shown = items
     .filter((i) => filter === 'all' || (filter === 'fav' ? i.data.favorite : i.data.category === filter))
@@ -96,27 +119,64 @@ export default function Mood() {
         <div className="card-head">
           <h2 className="section">{t('Our Pinterest board')}</h2>
           {board && (
-            <div className="row-gap">
-              <button className="btn small" onClick={() => setShowBoard(!showBoard)}>
-                {showBoard ? t('Hide') : t('Show here')}
-              </button>
-              <a className="btn small primary" href={board} target="_blank" rel="noreferrer">
-                {t('Open in Pinterest')}
-              </a>
-            </div>
+            <a className="btn small" href={board} target="_blank" rel="noreferrer">
+              {t('Open in Pinterest')} ↗
+            </a>
           )}
         </div>
         {board ? (
           <>
-            {showBoard && (
-              <PinEmbed
-                key={board}
-                className="pin-board"
-                html={`<a data-pin-do="embedBoard" data-pin-board-width="900" data-pin-scale-height="520" data-pin-scale-width="100" href="${esc(board)}">${esc(t('Loading board…'))}</a>`}
-              />
+            {feed.state === 'loading' && <p className="small muted">{t('Loading board…')}</p>}
+            {feed.state === 'ok' && feed.pins.length > 0 && (
+              <>
+                <p className="small muted" style={{ marginBottom: 12 }}>
+                  {t('Tap the heart to keep a pin in your favourites below.')}
+                </p>
+                <div className="board-grid">
+                  {feed.pins.map((p) => {
+                    const saved = items.find((i) => i.data.src === p.image)
+                    return (
+                      <div key={p.image} className="board-pin">
+                        <a href={p.link || board} target="_blank" rel="noreferrer">
+                          <img src={p.image} alt={p.title} loading="lazy" referrerPolicy="no-referrer" />
+                        </a>
+                        <button
+                          className={'heart board-heart' + (saved?.data.favorite ? ' on' : '')}
+                          aria-label={t('Favourite')}
+                          onClick={() =>
+                            saved
+                              ? update(saved, { favorite: !saved.data.favorite })
+                              : add('mood', { kind: 'image', src: p.image, title: p.title || undefined, link: p.link || undefined, category: 'Other', favorite: true })
+                          }
+                        >
+                          <Heart on={saved?.data.favorite} />
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              </>
             )}
-            <p className="small muted">
-              {t('To keep a favourite here, open a pin in Pinterest, tap Share, copy the link and use Add link.')}{' '}
+            {(feed.state === 'error' || (feed.state === 'ok' && feed.pins.length === 0)) && (
+              <>
+                <p className="small" style={{ marginBottom: 10 }}>
+                  {feed.state === 'ok'
+                    ? t('The board is connected but has no pins we can show yet.')
+                    : t('The pins could not be loaded here. This usually means the board is secret, or the link points to a single pin instead of the board.')}
+                </p>
+                <button className="btn small" onClick={() => setShowBoard(!showBoard)}>
+                  {showBoard ? t('Hide') : t("Try Pinterest's own preview")}
+                </button>
+                {showBoard && (
+                  <PinEmbed
+                    key={board}
+                    className="pin-board"
+                    html={`<a data-pin-do="embedBoard" data-pin-board-width="900" data-pin-scale-height="520" data-pin-scale-width="100" href="${esc(board)}"></a>`}
+                  />
+                )}
+              </>
+            )}
+            <p className="small muted" style={{ marginTop: 12 }}>
               <button className="linklike" onClick={() => saveSettings({ pinterestBoard: undefined })}>
                 {t('Change board')}
               </button>
@@ -128,7 +188,7 @@ export default function Mood() {
             onSubmit={(ev) => {
               ev.preventDefault()
               const v = boardDraft.trim()
-              if (!/^https?:\/\//i.test(v)) return alert(t('Please paste a link that starts with https://'))
+              if (!/^https?:\/\//i.test(v) || !isPinterestUrl(v)) return alert(t('Please paste the link to your Pinterest board.'))
               saveSettings({ pinterestBoard: v })
             }}
           >
@@ -136,12 +196,17 @@ export default function Mood() {
               className="input"
               style={{ flex: 1, minWidth: 220 }}
               type="url"
-              placeholder="https://www.pinterest.com/…/…/"
+              placeholder="https://pin.it/… or https://www.pinterest.com/…/…/"
               value={boardDraft}
               onChange={(ev) => setBoardDraft(ev.target.value)}
             />
             <button className="btn primary">{t('Connect board')}</button>
           </form>
+        )}
+        {!board && (
+          <p className="small muted" style={{ marginTop: 10 }}>
+            {t('In the Pinterest app: open the board, tap Share, then Copy link, and paste it here.')}
+          </p>
         )}
       </div>
 
@@ -177,7 +242,7 @@ export default function Mood() {
                   </a>
                 </div>
               ) : (
-                <img src={m.data.src} alt={m.data.title ?? ''} loading="lazy" onClick={() => setEditing({ row: m, data: { ...m.data } })} />
+                <img src={m.data.src} alt={m.data.title ?? ''} loading="lazy" referrerPolicy="no-referrer" onClick={() => setEditing({ row: m, data: { ...m.data } })} />
               )}
               <div className="mood-meta">
                 <button className="grow mood-title" onClick={() => setEditing({ row: m, data: { ...m.data } })}>
