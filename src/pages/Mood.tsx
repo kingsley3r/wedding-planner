@@ -27,7 +27,7 @@ function PinEmbed({ html, className }: { html: string; className?: string }) {
   return <div className={className} dangerouslySetInnerHTML={{ __html: html }} />
 }
 
-type Feed = { state: 'idle' | 'loading' | 'error' } | { state: 'ok'; pins: { link: string; title: string; image: string }[]; board?: string }
+type Feed = { state: 'idle' | 'loading' | 'error' } | { state: 'ok'; pins: { link: string; title: string; image: string }[]; board?: string; total?: number }
 
 /** Pins from the board's public feed, read through our /api/pinterest function. */
 function useBoardFeed(board?: string): Feed {
@@ -39,7 +39,7 @@ function useBoardFeed(board?: string): Feed {
     fetch('/api/pinterest?url=' + encodeURIComponent(board))
       .then(async (r) => {
         const j = r.ok && /json/.test(r.headers.get('content-type') ?? '') ? await r.json() : null
-        if (live) setFeed(j?.pins ? { state: 'ok', pins: j.pins, board: j.board } : { state: 'error' })
+        if (live) setFeed(j?.pins ? { state: 'ok', pins: j.pins, board: j.board, total: j.total } : { state: 'error' })
       })
       .catch(() => live && setFeed({ state: 'error' }))
     return () => {
@@ -64,6 +64,16 @@ export default function Mood() {
   const [busy, setBusy] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const feed = useBoardFeed(board)
+  const [limit, setLimit] = useState(60)
+  const moreRef = useRef<HTMLDivElement>(null)
+  // Load the next pins on their own as you scroll near the end.
+  useEffect(() => {
+    const el = moreRef.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const io = new IntersectionObserver((e) => e[0]?.isIntersecting && setLimit((n) => n + 60), { rootMargin: '600px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [limit, feed.state])
 
   const shown = items
     .filter((i) => filter === 'all' || (filter === 'fav' ? i.data.favorite : i.data.category === filter))
@@ -130,10 +140,10 @@ export default function Mood() {
             {feed.state === 'ok' && feed.pins.length > 0 && (
               <>
                 <p className="small muted" style={{ marginBottom: 12 }}>
-                  {t('Tap the heart to keep a pin in your favourites below.')}
+                  {t('{n} pins', { n: feed.pins.length })} · {t('Tap the heart to keep a pin in your favourites below.')}
                 </p>
                 <div className="board-grid">
-                  {feed.pins.map((p) => {
+                  {feed.pins.slice(0, limit).map((p) => {
                     const saved = items.find((i) => i.data.src === p.image)
                     return (
                       <div key={p.image} className="board-pin">
@@ -155,6 +165,13 @@ export default function Mood() {
                     )
                   })}
                 </div>
+                {feed.pins.length > limit && (
+                  <div ref={moreRef} style={{ textAlign: 'center', marginTop: 12 }}>
+                    <button className="btn small" onClick={() => setLimit((n) => n + 60)}>
+                      {t('Show more')} ({feed.pins.length - limit})
+                    </button>
+                  </div>
+                )}
               </>
             )}
             {(feed.state === 'error' || (feed.state === 'ok' && feed.pins.length === 0)) && (

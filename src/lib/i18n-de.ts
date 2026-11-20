@@ -455,5 +455,7 @@ export const de: Record<string, string> = {
   "The board is connected but has no pins we can show yet.": "Die Pinnwand ist verbunden, hat aber noch keine Pins, die wir zeigen können.",
   "The pins could not be loaded here. This usually means the board is secret, or the link points to a single pin instead of the board.": "Die Pins konnten hier nicht geladen werden. Meist ist die Pinnwand geheim, oder der Link zeigt auf einen einzelnen Pin statt auf die Pinnwand.",
   "Try Pinterest's own preview": "Pinterest-Vorschau versuchen",
-  "When the app opens, your monogram draws itself. Add up to 5 photos of the two of you and they fade in behind it.": "Beim Öffnen der App zeichnet sich euer Monogramm. Fügt bis zu 5 Fotos von euch beiden hinzu, sie blenden dahinter ein."
+  "When the app opens, your monogram draws itself. Add up to 5 photos of the two of you and they fade in behind it.": "Beim Öffnen der App zeichnet sich euer Monogramm. Fügt bis zu 5 Fotos von euch beiden hinzu, sie blenden dahinter ein.",
+  "{n} pins": "{n} Pins",
+  "Show more": "Mehr anzeigen"
 }

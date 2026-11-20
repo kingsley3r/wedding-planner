@@ -455,5 +455,7 @@ export const ro: Record<string, string> = {
   "The board is connected but has no pins we can show yet.": "Panoul este conectat, dar încă nu are pini pe care să-i arătăm.",
   "The pins could not be loaded here. This usually means the board is secret, or the link points to a single pin instead of the board.": "Pinii nu au putut fi încărcați aici. De obicei panoul este secret, sau linkul duce la un singur pin, nu la panou.",
   "Try Pinterest's own preview": "Încearcă previzualizarea Pinterest",
-  "When the app opens, your monogram draws itself. Add up to 5 photos of the two of you and they fade in behind it.": "Când se deschide aplicația, monograma voastră se desenează singură. Adăugați până la 5 fotografii cu voi doi și vor apărea în spatele ei."
+  "When the app opens, your monogram draws itself. Add up to 5 photos of the two of you and they fade in behind it.": "Când se deschide aplicația, monograma voastră se desenează singură. Adăugați până la 5 fotografii cu voi doi și vor apărea în spatele ei.",
+  "{n} pins": "{n} pini",
+  "Show more": "Arată mai multe"
 }
