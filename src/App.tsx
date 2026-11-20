@@ -77,7 +77,13 @@ function Shell() {
         {isDemo && <div className="side-foot small muted">{t('Demo mode: data stays on this device.')}</div>}
       </aside>
       <main className="content">
-        {error && <div className="banner error">{t('Could not sync')}: {error}</div>}
+        {error && (
+          <div className="banner error">
+            {/row-level security/i.test(error)
+              ? t('Your email is not on the allowed list. Add it to allowed_users in Supabase.')
+              : `${t('Could not sync')}: ${error}`}
+          </div>
+        )}
         {ready && (
           <Routes>
             <Route path="/" element={<Overview />} />
