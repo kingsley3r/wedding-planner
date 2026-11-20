@@ -711,5 +711,7 @@ export const ro: Record<string, string> = {
   "Stay": "Cazare",
   "Bali": "Bali",
   "Madeira": "Madeira",
-  "Zanzibar": "Zanzibar"
+  "Zanzibar": "Zanzibar",
+  "…or paste a photo link": "…sau lipiți un link către o fotografie",
+  "That photo could not be read. Try a screenshot of it, or paste a link.": "Fotografia nu a putut fi citită. Încercați o captură de ecran sau lipiți un link."
 }

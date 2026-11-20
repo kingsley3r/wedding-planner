@@ -711,5 +711,7 @@ export const de: Record<string, string> = {
   "Stay": "Unterkunft",
   "Bali": "Bali",
   "Madeira": "Madeira",
-  "Zanzibar": "Sansibar"
+  "Zanzibar": "Sansibar",
+  "…or paste a photo link": "…oder einen Foto-Link einfügen",
+  "That photo could not be read. Try a screenshot of it, or paste a link.": "Dieses Foto konnte nicht gelesen werden. Versucht einen Screenshot davon oder fügt einen Link ein."
 }

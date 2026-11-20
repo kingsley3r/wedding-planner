@@ -48,13 +48,13 @@ export default function Decisions() {
         </div>
       ) : (
         <div className="card">
-          <div className="timeline">
+          <div className="dl-list">
             {shown.map((r) => (
-              <div key={r.id} className="tl-item clickable" onClick={() => setEditing({ row: r, data: { ...r.data } })}>
-                <div className="tl-date">{fmtDate(r.data.date, lang, { day: 'numeric', month: 'short', year: 'numeric' })}</div>
-                <div className="tl-body">
+              <div key={r.id} className="dl-item clickable" onClick={() => setEditing({ row: r, data: { ...r.data } })}>
+                <div className="dl-date">{fmtDate(r.data.date, lang, { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                <div className="dl-body">
                   <div className="title">{r.data.title}</div>
-                  {r.data.decision && <div className="tl-decision">{r.data.decision}</div>}
+                  {r.data.decision && <div className="dl-decision">{r.data.decision}</div>}
                   {r.data.why && (
                     <div className="meta">
                       {t('Why')}: {r.data.why}
