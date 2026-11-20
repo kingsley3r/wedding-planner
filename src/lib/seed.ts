@@ -152,14 +152,19 @@ export function seedRows(): Row[] {
     ['Cristian Marin', 'bride', 'Friends', 'attending'],
     ['David Ionescu', 'groom', 'Family', 'attending', t1.id]
   ]
-  const guests = people.map(([name, side, group, rsvp, tableId]) =>
-    row('guest', { name, side, group, rsvp, tableId, meal: rsvp === 'attending' ? 'Standard' : undefined })
+  const hotel = row('stay', { hotel: 'Hotel near the venue (example)', checkIn: '2027-08-13', checkOut: '2027-08-15', rooms: 6, pricePerNight: 110 })
+  const guests = people.map(([name, side, group, rsvp, tableId], i) =>
+    row('guest', { name, side, group, rsvp, tableId, meal: rsvp === 'attending' ? 'Standard' : undefined, stayId: group === 'Family' && i < 6 ? hotel.id : undefined })
   )
+  const contacts = [
+    row('contact', { name: 'Usher lead (example)', role: 'helper', title: 'Usher', phone: '+43 660 0000000', dayOf: true }),
+    row('contact', { name: 'Pastor (example)', role: 'church', title: 'Pastor', dayOf: true })
+  ] as Row[]
   const vendors = [
     row('vendor', { name: 'Photo studio (example)', category: 'Photographer', status: 'booked', quote: 3200 }),
     row('vendor', { name: 'Flower shop (example)', category: 'Florist', status: 'quoted', quote: 2300 }),
     row('vendor', { name: 'Venue catering (example)', category: 'Caterer', status: 'contacted' }),
     row('vendor', { name: 'Worship band (example)', category: 'Music', status: 'researching' })
   ] as Row[]
-  return [...rows, head, t1, t2, t3, ...guests, ...vendors]
+  return [...rows, head, t1, t2, t3, hotel, ...guests, ...vendors, ...contacts]
 }

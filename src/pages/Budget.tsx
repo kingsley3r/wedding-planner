@@ -4,6 +4,7 @@ import { useStore } from '../lib/store'
 import type { BudgetItem, Installment, Row } from '../lib/types'
 import { allPayments, downloadFile, markPaidPatch, newInstallment, paymentsIcs, withInstallments, addDaysIso, type Payment } from '../lib/payments'
 import { fmtDate, money, num, todayIso } from '../lib/util'
+import { BudgetChart } from '../components/BudgetChart'
 import { Bar, Empty, Fab, Field, PageHead, Select, Sheet, Text } from '../components/ui'
 
 const CATEGORIES = [
@@ -92,6 +93,8 @@ export default function Budget() {
           </div>
         </div>
       </div>
+
+      <BudgetChart items={items} />
 
       <div className="card">
         <div className="card-head">

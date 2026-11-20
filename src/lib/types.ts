@@ -13,6 +13,7 @@ export interface Guest {
   diet?: string
   child?: boolean
   tableId?: string
+  stayId?: string
   notes?: string
 }
 
@@ -104,6 +105,43 @@ export interface MoodItem {
   notes?: string
 }
 
+export type ContactRole = 'family' | 'helper' | 'church' | 'other'
+export interface Contact {
+  name: string
+  role: ContactRole
+  /** e.g. "Usher", "Best man", "Pastor" */
+  title?: string
+  phone?: string
+  email?: string
+  notes?: string
+  /** Shown on the day-of helper page. */
+  dayOf?: boolean
+}
+
+export interface Stay {
+  hotel: string
+  address?: string
+  phone?: string
+  website?: string
+  checkIn?: string
+  checkOut?: string
+  rooms?: number
+  pricePerNight?: number
+  notes?: string
+}
+
+export type ProgramKind = 'entrance' | 'song' | 'prayer' | 'reading' | 'sermon' | 'vows' | 'blessing' | 'music' | 'other'
+export interface ProgramItem {
+  order: number
+  kind: ProgramKind
+  titleRo: string
+  titleDe: string
+  /** Song title, Bible reference… */
+  detail?: string
+  who?: string
+  minutes?: number
+}
+
 export interface Settings {
   partner1: string
   partner2: string
@@ -113,6 +151,8 @@ export interface Settings {
   pinterestBoard?: string
   /** Remind this many days before a payment is due. */
   reminderDays?: number
+  /** Secret part of the read-only day-of helper link. */
+  helperToken?: string
 }
 
 export interface KindMap {
@@ -125,6 +165,9 @@ export interface KindMap {
   schedule: ScheduleItem
   note: Note
   mood: MoodItem
+  contact: Contact
+  stay: Stay
+  program: ProgramItem
   settings: Settings
 }
 export type Kind = keyof KindMap

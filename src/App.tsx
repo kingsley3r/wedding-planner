@@ -20,6 +20,10 @@ import Settings from './pages/Settings'
 import More from './pages/More'
 import Mood from './pages/Mood'
 import Print from './pages/Print'
+import Contacts from './pages/Contacts'
+import Stays from './pages/Stays'
+import Program from './pages/Program'
+import Helper from './pages/Helper'
 
 export const NAV = [
   { to: '/', label: 'Overview' },
@@ -30,6 +34,9 @@ export const NAV = [
   { to: '/checklist', label: 'Checklist' },
   { to: '/seating', label: 'Seating' },
   { to: '/schedule', label: 'Day-of schedule' },
+  { to: '/program', label: 'Church program' },
+  { to: '/contacts', label: 'Contacts' },
+  { to: '/stays', label: 'Accommodation' },
   { to: '/mood', label: 'Mood board' },
   { to: '/notes', label: 'Notes' },
   { to: '/print', label: 'Print & export' },
@@ -37,6 +44,19 @@ export const NAV = [
 ]
 
 export default function App() {
+  const { pathname } = useLocation()
+  // The day-of page is public: it opens from a secret link without signing in.
+  if (pathname.startsWith('/helper/')) {
+    return (
+      <Routes>
+        <Route path="/helper/:token" element={<Helper />} />
+      </Routes>
+    )
+  }
+  return <Private />
+}
+
+function Private() {
   const [session, setSession] = useState<Session | null>(null)
   const [checked, setChecked] = useState(isDemo)
 
@@ -64,7 +84,7 @@ function Shell() {
   const dueCount = settings ? duePayments(list('budget'), settings.data.reminderDays ?? 7).length : 0
   const s = settings?.data
   const { pathname } = useLocation()
-  const inMore = ['/vendors', '/venues', '/checklist', '/schedule', '/notes', '/settings', '/mood'].includes(pathname) || pathname.startsWith('/print')
+  const inMore = ['/vendors', '/venues', '/checklist', '/schedule', '/notes', '/settings', '/mood', '/program', '/contacts', '/stays'].includes(pathname) || pathname.startsWith('/print')
   return (
     <div className="app">
       <aside className="sidebar">
@@ -102,6 +122,9 @@ function Shell() {
             <Route path="/schedule" element={<Schedule />} />
             <Route path="/notes" element={<Notes />} />
             <Route path="/mood" element={<Mood />} />
+            <Route path="/program" element={<Program />} />
+            <Route path="/contacts" element={<Contacts />} />
+            <Route path="/stays" element={<Stays />} />
             <Route path="/print" element={<Print />} />
             <Route path="/print/:doc" element={<Print />} />
             <Route path="/settings" element={<Settings />} />
