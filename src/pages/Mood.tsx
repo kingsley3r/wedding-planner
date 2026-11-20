@@ -1,0 +1,250 @@
+import { useEffect, useRef, useState } from 'react'
+import { useI18n } from '../lib/i18n'
+import { useStore } from '../lib/store'
+import type { MoodItem, Row } from '../lib/types'
+import { buildPinterestEmbeds, isPinterestUrl, resizeImage } from '../lib/util'
+import { Empty, Field, PageHead, Select, Sheet, Text } from '../components/ui'
+
+export const MOOD_CATEGORIES = ['Flowers', 'Dress', 'Suit', 'Decor', 'Table setting', 'Cake', 'Colours', 'Hair and makeup', 'Invitations', 'Other']
+
+function Heart({ on }: { on?: boolean }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M12 20.5s-7.5-4.6-9.3-9.2C1.5 8 3.6 4.5 7.2 4.5c2 0 3.4 1.1 4.8 2.8 1.4-1.7 2.8-2.8 4.8-2.8 3.6 0 5.7 3.5 4.5 6.8-1.8 4.6-9.3 9.2-9.3 9.2z"
+        fill={on ? 'var(--rose)' : 'none'}
+        stroke={on ? 'var(--rose)' : 'currentColor'}
+        strokeWidth="1.6"
+      />
+    </svg>
+  )
+}
+
+const esc = (v: string) => v.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
+
+/** Pinterest's script rewrites these nodes, so React must not own their children. */
+function PinEmbed({ html, className }: { html: string; className?: string }) {
+  return <div className={className} dangerouslySetInnerHTML={{ __html: html }} />
+}
+
+export default function Mood() {
+  const { t } = useI18n()
+  const { list, add, update, remove, settings, saveSettings } = useStore()
+  const items = list('mood')
+  const rawBoard = settings!.data.pinterestBoard
+  const board = rawBoard && /^https?:\/\//i.test(rawBoard) ? rawBoard : undefined
+  const [filter, setFilter] = useState<string>('all')
+  const [editing, setEditing] = useState<{ row?: Row<'mood'>; data: MoodItem } | null>(null)
+  const [linkOpen, setLinkOpen] = useState(false)
+  const [link, setLink] = useState('')
+  const [boardDraft, setBoardDraft] = useState('')
+  const [showBoard, setShowBoard] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const shown = items
+    .filter((i) => filter === 'all' || (filter === 'fav' ? i.data.favorite : i.data.category === filter))
+    .sort((a, b) => Number(!!b.data.favorite) - Number(!!a.data.favorite))
+  const usedCats = MOOD_CATEGORIES.filter((c) => items.some((i) => i.data.category === c))
+
+  useEffect(() => {
+    buildPinterestEmbeds()
+  }, [shown.length, showBoard, board, filter])
+
+  const onFiles = async (files: FileList | null) => {
+    if (!files?.length) return
+    setBusy(true)
+    try {
+      for (const f of Array.from(files)) {
+        const src = await resizeImage(f)
+        await add('mood', { kind: 'image', src, category: filter !== 'all' && filter !== 'fav' ? filter : 'Other', favorite: filter === 'fav' })
+      }
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const addLink = async () => {
+    const v = link.trim()
+    if (!/^https?:\/\//i.test(v)) return alert(t('Please paste a link that starts with https://'))
+    await add('mood', {
+      kind: isPinterestUrl(v) ? 'pin' : 'image',
+      src: v,
+      category: filter !== 'all' && filter !== 'fav' ? filter : 'Other',
+      favorite: filter === 'fav'
+    })
+    setLink('')
+    setLinkOpen(false)
+  }
+
+  const e = editing?.data
+  const set = (p: Partial<MoodItem>) => editing && setEditing({ ...editing, data: { ...editing.data, ...p } })
+
+  return (
+    <>
+      <PageHead eyebrow={t('{n} favourites', { n: items.filter((i) => i.data.favorite).length })} title={t('Mood board')}>
+        <button className="btn" onClick={() => setLinkOpen(true)}>
+          {t('Add link')}
+        </button>
+        <button className="btn primary" disabled={busy} onClick={() => fileRef.current?.click()}>
+          {busy ? t('Adding…') : t('Add photos')}
+        </button>
+      </PageHead>
+      <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(ev) => { onFiles(ev.target.files); ev.target.value = '' }} />
+
+      <div className="card">
+        <div className="card-head">
+          <h2 className="section">{t('Our Pinterest board')}</h2>
+          {board && (
+            <div className="row-gap">
+              <button className="btn small" onClick={() => setShowBoard(!showBoard)}>
+                {showBoard ? t('Hide') : t('Show here')}
+              </button>
+              <a className="btn small primary" href={board} target="_blank" rel="noreferrer">
+                {t('Open in Pinterest')}
+              </a>
+            </div>
+          )}
+        </div>
+        {board ? (
+          <>
+            {showBoard && (
+              <PinEmbed
+                key={board}
+                className="pin-board"
+                html={`<a data-pin-do="embedBoard" data-pin-board-width="900" data-pin-scale-height="520" data-pin-scale-width="100" href="${esc(board)}">${esc(t('Loading board…'))}</a>`}
+              />
+            )}
+            <p className="small muted">
+              {t('To keep a favourite here, open a pin in Pinterest, tap Share, copy the link and use Add link.')}{' '}
+              <button className="linklike" onClick={() => saveSettings({ pinterestBoard: undefined })}>
+                {t('Change board')}
+              </button>
+            </p>
+          </>
+        ) : (
+          <form
+            className="row-gap"
+            onSubmit={(ev) => {
+              ev.preventDefault()
+              const v = boardDraft.trim()
+              if (!/^https?:\/\//i.test(v)) return alert(t('Please paste a link that starts with https://'))
+              saveSettings({ pinterestBoard: v })
+            }}
+          >
+            <input
+              className="input"
+              style={{ flex: 1, minWidth: 220 }}
+              type="url"
+              placeholder="https://www.pinterest.com/…/…/"
+              value={boardDraft}
+              onChange={(ev) => setBoardDraft(ev.target.value)}
+            />
+            <button className="btn primary">{t('Connect board')}</button>
+          </form>
+        )}
+      </div>
+
+      <div className="chips" style={{ margin: '18px 0 14px' }}>
+        <button className={'chip' + (filter === 'all' ? ' on' : '')} onClick={() => setFilter('all')}>
+          {t('All')}
+        </button>
+        <button className={'chip' + (filter === 'fav' ? ' on' : '')} onClick={() => setFilter('fav')}>
+          ♥ {t('Favourites')}
+        </button>
+        {usedCats.map((c) => (
+          <button key={c} className={'chip' + (filter === c ? ' on' : '')} onClick={() => setFilter(c)}>
+            {t(c)}
+          </button>
+        ))}
+      </div>
+
+      {shown.length === 0 ? (
+        <div className="card">
+          <Empty title={filter === 'fav' ? t('No favourites yet') : t('Start your mood board')}>
+            <p className="small">{t('Add photos from your phone, or paste a link to an image or a Pinterest pin. Tap the heart to make it a favourite.')}</p>
+          </Empty>
+        </div>
+      ) : (
+        <div className="mood-grid">
+          {shown.map((m) => (
+            <div key={m.id} className="mood-tile">
+              {m.data.kind === 'pin' ? (
+                <div className="mood-pin">
+                  <PinEmbed key={m.data.src} html={`<a data-pin-do="embedPin" data-pin-width="medium" href="${esc(m.data.src)}">${esc(t('Pinterest pin'))}</a>`} />
+                  <a className="small muted" href={m.data.src} target="_blank" rel="noreferrer" style={{ display: 'block', padding: '8px 12px' }}>
+                    {t('Open in Pinterest')} ↗
+                  </a>
+                </div>
+              ) : (
+                <img src={m.data.src} alt={m.data.title ?? ''} loading="lazy" onClick={() => setEditing({ row: m, data: { ...m.data } })} />
+              )}
+              <div className="mood-meta">
+                <button className="grow mood-title" onClick={() => setEditing({ row: m, data: { ...m.data } })}>
+                  {m.data.title || t(m.data.category)}
+                </button>
+                <button
+                  className={'heart' + (m.data.favorite ? ' on' : '')}
+                  aria-label={t('Favourite')}
+                  onClick={() => update(m, { favorite: !m.data.favorite })}
+                >
+                  <Heart on={m.data.favorite} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {linkOpen && (
+        <Sheet title={t('Add link')} onClose={() => setLinkOpen(false)} onSave={addLink}>
+          <Field label={t('Image or Pinterest pin link')}>
+            <Text value={link} onChange={setLink} type="url" placeholder="https://www.pinterest.com/pin/…" autoFocus required />
+          </Field>
+          <p className="small muted" style={{ marginTop: 8 }}>
+            {t('Works best with the full pin link (pinterest.com/pin/…).')}
+          </p>
+        </Sheet>
+      )}
+
+      {editing && e && (
+        <Sheet
+          title={e.title || t('Inspiration')}
+          onClose={() => setEditing(null)}
+          onSave={async () => {
+            if (editing.row) await update(editing.row, editing.data)
+            setEditing(null)
+          }}
+          onDelete={
+            editing.row
+              ? async () => {
+                  await remove(editing.row!.id)
+                  setEditing(null)
+                }
+              : undefined
+          }
+        >
+          {e.kind === 'image' && <img src={e.src} alt="" style={{ width: '100%', borderRadius: 12, marginBottom: 16, maxHeight: 360, objectFit: 'cover' }} />}
+          <div className="form">
+            <Field label={t('Title')}>
+              <Text value={e.title} onChange={(v) => set({ title: v })} />
+            </Field>
+            <Field label={t('Category')}>
+              <Select value={e.category} onChange={(v) => set({ category: v })} options={[...new Set([...MOOD_CATEGORIES, e.category])].map((c) => ({ value: c, label: t(c) }))} />
+            </Field>
+            <Field label={t('Notes')} full>
+              <Text value={e.notes} onChange={(v) => set({ notes: v })} placeholder={t('e.g. ask the florist for this')} />
+            </Field>
+            <Field label={t('Favourite')}>
+              <div className="chips">
+                <button type="button" className={'chip' + (e.favorite ? ' on' : '')} onClick={() => set({ favorite: !e.favorite })}>
+                  ♥ {e.favorite ? t('Favourite') : t('Mark as favourite')}
+                </button>
+              </div>
+            </Field>
+          </div>
+        </Sheet>
+      )}
+    </>
+  )
+}

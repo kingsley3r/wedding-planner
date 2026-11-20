@@ -7,7 +7,12 @@ const ITEMS = [
   { to: '/venues', label: 'Venues' },
   { to: '/checklist', label: 'Checklist' },
   { to: '/schedule', label: 'Day-of schedule' },
+  { to: '/program', label: 'Church program' },
+  { to: '/contacts', label: 'Contacts' },
+  { to: '/stays', label: 'Accommodation' },
+  { to: '/mood', label: 'Mood board' },
   { to: '/notes', label: 'Notes' },
+  { to: '/print', label: 'Print & export' },
   { to: '/settings', label: 'Settings' }
 ]
 

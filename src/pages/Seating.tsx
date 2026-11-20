@@ -1,4 +1,5 @@
 import { useRef, useState, type PointerEvent as RPointerEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { useI18n } from '../lib/i18n'
 import { useStore } from '../lib/store'
 import type { Row, SeatTable, TableShape } from '../lib/types'
@@ -160,9 +161,9 @@ export default function Seating() {
         <button className="btn" onClick={() => addTable('long')}>
           {t('Long table')}
         </button>
-        <button className="btn hide-mobile" onClick={() => window.print()}>
+        <Link className="btn hide-mobile" to="/print/seating">
           {t('Print')}
-        </button>
+        </Link>
       </PageHead>
 
       {selGuest && (

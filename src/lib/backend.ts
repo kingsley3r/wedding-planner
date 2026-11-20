@@ -145,4 +145,17 @@ export function resetDemo() {
   }
 }
 
+/** Read-only rows for the day-of helper page. Works without signing in. */
+export async function loadDayOf(token: string): Promise<Row[] | null> {
+  if (supabase) {
+    const { data, error } = await supabase.rpc('day_of', { tok: token })
+    if (error) throw error
+    const rows = (data ?? []) as Row[]
+    return rows.length ? rows : null
+  }
+  const rows = await demoBackend().load()
+  const s = rows.find((r) => r.kind === 'settings')
+  return s && (s.data as { helperToken?: string }).helperToken === token ? rows : null
+}
+
 export const backend: Backend = supabase ? supabaseBackend(supabase) : demoBackend()

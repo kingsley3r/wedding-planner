@@ -12,12 +12,18 @@ export default function Checklist() {
   const { list, add, update, remove, settings } = useStore()
   const tasks = list('task')
   const [showDone, setShowDone] = useState(false)
+  const [who, setWho] = useState<string>('all')
   const [editing, setEditing] = useState<{ row?: Row<'task'>; data: Task } | null>(null)
   const today = todayIso()
   const s = settings!.data
 
   const done = tasks.filter((x) => x.data.done).length
-  const shown = tasks.filter((x) => showDone || !x.data.done).sort((a, b) => (a.data.dueDate ?? '9999').localeCompare(b.data.dueDate ?? '9999'))
+  // People tasks can be given to: the couple, plus family and helpers from Contacts.
+  const people = [...new Set([s.partner1, s.partner2, ...list('contact').map((c) => c.data.name)])].filter(Boolean)
+  const owners = [...new Set(tasks.map((x) => x.data.owner).filter(Boolean) as string[])]
+  const shown = tasks
+    .filter((x) => who === 'all' || (who === 'none' ? !x.data.owner : x.data.owner === who))
+    .filter((x) => showDone || !x.data.done).sort((a, b) => (a.data.dueDate ?? '9999').localeCompare(b.data.dueDate ?? '9999'))
   // Group by month of the due date.
   const groups = new Map<string, Row<'task'>[]>()
   for (const x of shown) {
@@ -47,8 +53,19 @@ export default function Checklist() {
       <div style={{ marginBottom: 20 }}>
         <Bar value={done / (tasks.length || 1)} />
       </div>
-      <div className="chips hide-desktop" style={{ marginBottom: 14 }}>
-        <button className={'chip' + (showDone ? ' on' : '')} onClick={() => setShowDone(!showDone)}>
+      <div className="chips" style={{ marginBottom: 14 }}>
+        <button className={'chip' + (who === 'all' ? ' on' : '')} onClick={() => setWho('all')}>
+          {t('Everyone')}
+        </button>
+        {[...new Set([s.partner1, s.partner2, ...owners])].map((p) => (
+          <button key={p} className={'chip' + (who === p ? ' on' : '')} onClick={() => setWho(p)}>
+            {p} · {tasks.filter((x) => x.data.owner === p && !x.data.done).length}
+          </button>
+        ))}
+        <button className={'chip' + (who === 'none' ? ' on' : '')} onClick={() => setWho('none')}>
+          {t('Not assigned')}
+        </button>
+        <button className={'chip hide-desktop' + (showDone ? ' on' : '')} onClick={() => setShowDone(!showDone)}>
           {t('Show done')}
         </button>
       </div>
@@ -74,8 +91,9 @@ export default function Checklist() {
                     <div className="title" style={{ textDecoration: x.data.done ? 'line-through' : undefined, color: x.data.done ? 'var(--muted)' : undefined }}>
                       {t(x.data.title)}
                     </div>
-                    <div className="meta">{[x.data.dueDate && fmtDate(x.data.dueDate, lang), x.data.owner].filter(Boolean).join(' · ')}</div>
+                    <div className="meta">{x.data.dueDate && fmtDate(x.data.dueDate, lang)}</div>
                   </div>
+                  {x.data.owner && <span className="pill">{x.data.owner}</span>}
                   {late && <span className="pill bad">{t('Overdue')}</span>}
                 </div>
               )
@@ -109,12 +127,15 @@ export default function Checklist() {
             </Field>
             <Field label={t('Who')}>
               <div className="chips">
-                {[s.partner1, s.partner2, t('Both')].map((p) => (
+                {[...new Set([...people, t('Both'), ...(e.owner ? [e.owner] : [])])].map((p) => (
                   <button type="button" key={p} className={'chip' + (e.owner === p ? ' on' : '')} onClick={() => set({ owner: e.owner === p ? undefined : p })}>
                     {p}
                   </button>
                 ))}
               </div>
+            </Field>
+            <Field label={t('Someone else')}>
+              <Text value={people.includes(e.owner ?? '') || e.owner === t('Both') ? '' : e.owner} onChange={(v) => set({ owner: v || undefined })} placeholder={t('e.g. Mum, Andrei')} />
             </Field>
           </div>
         </Sheet>

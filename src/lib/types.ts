@@ -13,7 +13,16 @@ export interface Guest {
   diet?: string
   child?: boolean
   tableId?: string
+  stayId?: string
   notes?: string
+}
+
+export interface Installment {
+  id: string
+  label: string
+  amount: number
+  dueDate?: string
+  paid: boolean
 }
 
 export interface BudgetItem {
@@ -22,6 +31,8 @@ export interface BudgetItem {
   planned: number
   actual: number
   paid: number
+  /** Scheduled payments (deposit, balance…). When present, `paid` is the sum of the paid ones. */
+  installments?: Installment[]
   dueDate?: string
   payer?: string
   vendorId?: string
@@ -84,12 +95,64 @@ export interface Note {
   pinned?: boolean
 }
 
+export interface MoodItem {
+  /** An image (data URL or web address) or a Pinterest pin link. */
+  kind: 'image' | 'pin'
+  src: string
+  title?: string
+  category: string
+  favorite?: boolean
+  notes?: string
+}
+
+export type ContactRole = 'family' | 'helper' | 'church' | 'other'
+export interface Contact {
+  name: string
+  role: ContactRole
+  /** e.g. "Usher", "Best man", "Pastor" */
+  title?: string
+  phone?: string
+  email?: string
+  notes?: string
+  /** Shown on the day-of helper page. */
+  dayOf?: boolean
+}
+
+export interface Stay {
+  hotel: string
+  address?: string
+  phone?: string
+  website?: string
+  checkIn?: string
+  checkOut?: string
+  rooms?: number
+  pricePerNight?: number
+  notes?: string
+}
+
+export type ProgramKind = 'entrance' | 'song' | 'prayer' | 'reading' | 'sermon' | 'vows' | 'blessing' | 'music' | 'other'
+export interface ProgramItem {
+  order: number
+  kind: ProgramKind
+  titleRo: string
+  titleDe: string
+  /** Song title, Bible reference… */
+  detail?: string
+  who?: string
+  minutes?: number
+}
+
 export interface Settings {
   partner1: string
   partner2: string
   date: string
   guestTarget: number
   budgetTotal: number
+  pinterestBoard?: string
+  /** Remind this many days before a payment is due. */
+  reminderDays?: number
+  /** Secret part of the read-only day-of helper link. */
+  helperToken?: string
 }
 
 export interface KindMap {
@@ -101,6 +164,10 @@ export interface KindMap {
   table: SeatTable
   schedule: ScheduleItem
   note: Note
+  mood: MoodItem
+  contact: Contact
+  stay: Stay
+  program: ProgramItem
   settings: Settings
 }
 export type Kind = keyof KindMap
