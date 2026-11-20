@@ -16,12 +16,22 @@ export interface Guest {
   notes?: string
 }
 
+export interface Installment {
+  id: string
+  label: string
+  amount: number
+  dueDate?: string
+  paid: boolean
+}
+
 export interface BudgetItem {
   category: string
   label: string
   planned: number
   actual: number
   paid: number
+  /** Scheduled payments (deposit, balance…). When present, `paid` is the sum of the paid ones. */
+  installments?: Installment[]
   dueDate?: string
   payer?: string
   vendorId?: string
@@ -84,12 +94,25 @@ export interface Note {
   pinned?: boolean
 }
 
+export interface MoodItem {
+  /** An image (data URL or web address) or a Pinterest pin link. */
+  kind: 'image' | 'pin'
+  src: string
+  title?: string
+  category: string
+  favorite?: boolean
+  notes?: string
+}
+
 export interface Settings {
   partner1: string
   partner2: string
   date: string
   guestTarget: number
   budgetTotal: number
+  pinterestBoard?: string
+  /** Remind this many days before a payment is due. */
+  reminderDays?: number
 }
 
 export interface KindMap {
@@ -101,6 +124,7 @@ export interface KindMap {
   table: SeatTable
   schedule: ScheduleItem
   note: Note
+  mood: MoodItem
   settings: Settings
 }
 export type Kind = keyof KindMap

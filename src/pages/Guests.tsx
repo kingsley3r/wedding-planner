@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useI18n } from '../lib/i18n'
 import { useStore } from '../lib/store'
 import type { Guest, Row, Rsvp, Side } from '../lib/types'
@@ -132,6 +133,9 @@ export default function Guests() {
         <button className="btn hide-mobile" onClick={() => fileRef.current?.click()}>
           {t('Import CSV')}
         </button>
+        <Link className="btn hide-mobile" to="/print/guests">
+          {t('Print / export')}
+        </Link>
         <button className="btn primary hide-mobile" onClick={() => setEditing({ data: blank() })}>
           {t('Add guest')}
         </button>
@@ -214,7 +218,10 @@ export default function Guests() {
         <p className="small muted hide-desktop" style={{ marginTop: 12 }}>
           <button className="btn small" onClick={() => fileRef.current?.click()}>
             {t('Import CSV')}
-          </button>
+          </button>{' '}
+          <Link className="btn small" to="/print/guests">
+            {t('Print / export')}
+          </Link>
         </p>
       </div>
 

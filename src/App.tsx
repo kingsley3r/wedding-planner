@@ -5,6 +5,7 @@ import { getSession, isDemo, onAuthChange } from './lib/backend'
 import { StoreProvider, useStore } from './lib/store'
 import { useI18n } from './lib/i18n'
 import { fmtDate } from './lib/util'
+import { duePayments } from './lib/payments'
 import Login from './pages/Login'
 import Overview from './pages/Overview'
 import Guests from './pages/Guests'
@@ -17,6 +18,8 @@ import Schedule from './pages/Schedule'
 import Notes from './pages/Notes'
 import Settings from './pages/Settings'
 import More from './pages/More'
+import Mood from './pages/Mood'
+import Print from './pages/Print'
 
 export const NAV = [
   { to: '/', label: 'Overview' },
@@ -27,7 +30,9 @@ export const NAV = [
   { to: '/checklist', label: 'Checklist' },
   { to: '/seating', label: 'Seating' },
   { to: '/schedule', label: 'Day-of schedule' },
+  { to: '/mood', label: 'Mood board' },
   { to: '/notes', label: 'Notes' },
+  { to: '/print', label: 'Print & export' },
   { to: '/settings', label: 'Settings' }
 ]
 
@@ -55,10 +60,11 @@ export default function App() {
 
 function Shell() {
   const { t, lang } = useI18n()
-  const { settings, error, ready } = useStore()
+  const { settings, error, ready, list } = useStore()
+  const dueCount = settings ? duePayments(list('budget'), settings.data.reminderDays ?? 7).length : 0
   const s = settings?.data
   const { pathname } = useLocation()
-  const inMore = ['/vendors', '/venues', '/checklist', '/schedule', '/notes', '/settings'].includes(pathname)
+  const inMore = ['/vendors', '/venues', '/checklist', '/schedule', '/notes', '/settings', '/mood'].includes(pathname) || pathname.startsWith('/print')
   return (
     <div className="app">
       <aside className="sidebar">
@@ -95,6 +101,9 @@ function Shell() {
             <Route path="/seating" element={<Seating />} />
             <Route path="/schedule" element={<Schedule />} />
             <Route path="/notes" element={<Notes />} />
+            <Route path="/mood" element={<Mood />} />
+            <Route path="/print" element={<Print />} />
+            <Route path="/print/:doc" element={<Print />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/more" element={<More />} />
             <Route path="*" element={<Navigate to="/" />} />
@@ -115,7 +124,7 @@ function Shell() {
             end={n.to === '/'}
             className={({ isActive }) => (isActive || (n.to === '/more' && inMore) ? 'active' : '')}
           >
-            <i />
+            <i className={n.to === '/budget' && dueCount ? 'alert' : undefined} />
             {t(n.label)}
           </NavLink>
         ))}

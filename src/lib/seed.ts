@@ -14,6 +14,8 @@ function addDays(date: string, days: number) {
   return d.toISOString().slice(0, 10)
 }
 
+const todayIsoSeed = () => new Date().toISOString().slice(0, 10)
+
 function row<K extends Kind>(kind: K, data: KindMap[K]): Row<K> {
   return { id: uid(), kind, data }
 }
@@ -113,6 +115,17 @@ export function seedRows(): Row[] {
       const b = r.data as KindMap['budget']
       const v = budgetPlan[b.category]
       if (v) [b.planned, b.actual, b.paid] = v
+      if (b.category === 'Venue')
+        b.installments = [
+          { id: uid(), label: 'Deposit', amount: 3000, dueDate: '2026-10-01', paid: true },
+          { id: uid(), label: 'Balance', amount: 6200, dueDate: '2027-07-14', paid: false }
+        ]
+      if (b.category === 'Photo and video')
+        b.installments = [
+          { id: uid(), label: 'Deposit', amount: 800, dueDate: '2026-11-02', paid: true },
+          { id: uid(), label: 'Balance', amount: 2400, dueDate: addDays(todayIsoSeed(), 4), paid: false }
+        ]
+      if (b.installments) b.dueDate = b.installments.find((i) => !i.paid)?.dueDate
     }
   })
   const t1 = row('table', { name: '1', shape: 'round', seats: 10, x: 22, y: 45 })

@@ -3,6 +3,7 @@ import { useI18n } from '../lib/i18n'
 import { useStore } from '../lib/store'
 import { daysUntil, fmtDate, money, todayIso } from '../lib/util'
 import { Bar } from '../components/ui'
+import { allPayments, duePayments } from '../lib/payments'
 
 export default function Overview() {
   const { t, lang } = useI18n()
@@ -40,23 +41,34 @@ export default function Overview() {
         label: x.data.dueDate! < today ? t('Overdue') : t('To do'),
         to: '/checklist'
       })),
-    ...budget
-      .filter((b) => b.data.dueDate && (b.data.actual || b.data.planned) > (b.data.paid || 0))
-      .map((b) => ({
-        key: b.id,
-        title: `${t('Payment')}: ${b.data.label}`,
-        meta: `${money((b.data.actual || b.data.planned) - (b.data.paid || 0), lang)} · ${fmtDate(b.data.dueDate, lang)}`,
-        date: b.data.dueDate!,
-        tone: (b.data.dueDate! < today ? 'bad' : 'warn') as Up['tone'],
-        label: b.data.dueDate! < today ? t('Overdue') : t('Due'),
+    ...allPayments(budget)
+      .filter((p) => !p.paid)
+      .map((p) => ({
+        key: p.key,
+        title: `${t('Payment')}: ${p.item === p.row.data.category ? t(p.item) : p.item}${p.label ? ' · ' + t(p.label) : ''}`,
+        meta: `${money(p.amount, lang)} · ${fmtDate(p.dueDate, lang)}`,
+        date: p.dueDate,
+        tone: (p.dueDate < today ? 'bad' : 'warn') as Up['tone'],
+        label: p.dueDate < today ? t('Overdue') : t('Due'),
         to: '/budget'
       }))
   ]
     .sort((a, b) => a.date.localeCompare(b.date))
     .slice(0, 6)
 
+  const due = duePayments(budget, s.reminderDays ?? 7)
+  const dueTotal = due.reduce((a, p) => a + p.amount, 0)
+
   return (
     <>
+      {due.length > 0 && (
+        <Link to="/budget" className="banner" style={{ textDecoration: 'none' }}>
+          <span>
+            {due.length === 1 ? t('1 payment due soon') : t('{n} payments due soon', { n: due.length })} · <b className="money">{money(dueTotal, lang)}</b>
+          </span>
+          <span>›</span>
+        </Link>
+      )}
       <div className="page-head">
         <div>
           <div className="eyebrow">{greeting}</div>

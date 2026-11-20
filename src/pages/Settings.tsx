@@ -37,6 +37,12 @@ export default function Settings() {
           <Field label={t('Total budget (EUR)')}>
             <Text type="number" value={s.budgetTotal} onChange={(v) => saveSettings({ budgetTotal: num(v) })} />
           </Field>
+          <Field label={t('Payment reminders (days before)')}>
+            <Text type="number" value={s.reminderDays ?? 7} onChange={(v) => saveSettings({ reminderDays: Math.max(0, Math.round(num(v))) })} />
+          </Field>
+          <Field label={t('Pinterest board link')}>
+            <Text type="url" value={s.pinterestBoard} onChange={(v) => saveSettings({ pinterestBoard: v.trim() || undefined })} placeholder="https://www.pinterest.com/…" />
+          </Field>
         </div>
       </div>
       <div className="card">

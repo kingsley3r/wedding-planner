@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useI18n } from '../lib/i18n'
 import { useStore } from '../lib/store'
 import type { Row, ScheduleItem } from '../lib/types'
@@ -36,9 +37,9 @@ export default function Schedule() {
         <button className={'btn' + (dayOf ? ' primary' : '')} onClick={() => setDayOf(!dayOf)}>
           {t('Day-of mode')}
         </button>
-        <button className="btn hide-mobile" onClick={() => window.print()}>
+        <Link className="btn" to="/print/schedule">
           {t('Print')}
-        </button>
+        </Link>
         <button className="btn primary hide-mobile" onClick={() => setEditing({ data: blank() })}>
           {t('Add item')}
         </button>
