@@ -6,6 +6,9 @@ import { StoreProvider, useStore } from './lib/store'
 import { useI18n } from './lib/i18n'
 import { fmtDate } from './lib/util'
 import { duePayments } from './lib/payments'
+import { GROUPS, groupOf } from './lib/nav'
+import { Icon } from './components/Icons'
+import { Intro, introSeen } from './components/Intro'
 import Login from './pages/Login'
 import Overview from './pages/Overview'
 import Guests from './pages/Guests'
@@ -25,23 +28,8 @@ import Stays from './pages/Stays'
 import Program from './pages/Program'
 import Helper from './pages/Helper'
 
-export const NAV = [
-  { to: '/', label: 'Overview' },
-  { to: '/guests', label: 'Guests & RSVPs' },
-  { to: '/budget', label: 'Budget' },
-  { to: '/vendors', label: 'Vendors' },
-  { to: '/venues', label: 'Venues' },
-  { to: '/checklist', label: 'Checklist' },
-  { to: '/seating', label: 'Seating' },
-  { to: '/schedule', label: 'Day-of schedule' },
-  { to: '/program', label: 'Church program' },
-  { to: '/contacts', label: 'Contacts' },
-  { to: '/stays', label: 'Accommodation' },
-  { to: '/mood', label: 'Mood board' },
-  { to: '/notes', label: 'Notes' },
-  { to: '/print', label: 'Print & export' },
-  { to: '/settings', label: 'Settings' }
-]
+/** Flat list of every page, kept for anything that needs all pages in order. */
+export const NAV = GROUPS.flatMap((g) => g.pages)
 
 export default function App() {
   const { pathname } = useLocation()
@@ -84,21 +72,38 @@ function Shell() {
   const dueCount = settings ? duePayments(list('budget'), settings.data.reminderDays ?? 7).length : 0
   const s = settings?.data
   const { pathname } = useLocation()
-  const inMore = ['/vendors', '/venues', '/checklist', '/schedule', '/notes', '/settings', '/mood', '/program', '/contacts', '/stays'].includes(pathname) || pathname.startsWith('/print')
+  const group = groupOf(pathname)
+  const [intro, setIntro] = useState(() => !introSeen())
+  const showIntro = intro && !(ready && settings?.data.introOff)
   return (
     <div className="app">
+      {showIntro && <Intro onDone={() => setIntro(false)} />}
       <aside className="sidebar">
         <div className="brand">
           {s ? `${s.partner1} & ${s.partner2}` : t('Our wedding')}
           <small>{s ? fmtDate(s.date, lang, { day: 'numeric', month: 'long', year: 'numeric' }) : ''}</small>
         </div>
         <nav className="side-nav">
-          {NAV.map((n) => (
-            <NavLink key={n.to} to={n.to} end={n.to === '/'}>
-              <i />
-              {t(n.label)}
-            </NavLink>
+          {GROUPS.filter((g) => g.id !== 'more').map((g) => (
+            <div key={g.id} className={'side-group tone-' + g.tone}>
+              {g.id !== 'home' && <div className="side-head">{t(g.title)}</div>}
+              {g.pages.map((n) => (
+                <NavLink key={n.to} to={n.to} end={n.to === '/'}>
+                  <Icon name={n.icon} size={18} />
+                  {t(n.label)}
+                  {n.to === '/budget' && dueCount > 0 && <b className="dot" />}
+                </NavLink>
+              ))}
+            </div>
           ))}
+          <div className="side-group side-bottom">
+            {GROUPS[GROUPS.length - 1].pages.map((n) => (
+              <NavLink key={n.to} to={n.to}>
+                <Icon name={n.icon} size={18} />
+                {t(n.label)}
+              </NavLink>
+            ))}
+          </div>
         </nav>
         {isDemo && <div className="side-foot small muted">{t('Demo mode: data stays on this device.')}</div>}
       </aside>
@@ -109,6 +114,16 @@ function Shell() {
               ? t('Your email is not on the allowed list. Add it to allowed_users in Supabase.')
               : `${t('Could not sync')}: ${error}`}
           </div>
+        )}
+        {ready && group.pages.length > 1 && group.id !== 'more' && (
+          <nav className={'subnav tone-' + group.tone}>
+            {group.pages.map((p) => (
+              <NavLink key={p.to} to={p.to}>
+                <Icon name={p.icon} size={16} />
+                {t(p.label)}
+              </NavLink>
+            ))}
+          </nav>
         )}
         {ready && (
           <Routes>
@@ -134,21 +149,13 @@ function Shell() {
         )}
       </main>
       <nav className="tabbar">
-        {[
-          { to: '/', label: 'Home' },
-          { to: '/guests', label: 'Guests' },
-          { to: '/budget', label: 'Budget' },
-          { to: '/seating', label: 'Seating' },
-          { to: '/more', label: 'More' }
-        ].map((n) => (
-          <NavLink
-            key={n.to}
-            to={n.to}
-            end={n.to === '/'}
-            className={({ isActive }) => (isActive || (n.to === '/more' && inMore) ? 'active' : '')}
-          >
-            <i className={n.to === '/budget' && dueCount ? 'alert' : undefined} />
-            {t(n.label)}
+        {GROUPS.map((g) => (
+          <NavLink key={g.id} to={g.id === 'more' ? '/more' : g.pages[0].to} end={g.id === 'home'} className={'tone-' + g.tone + (group.id === g.id ? ' active' : '')}>
+            <span className="tab-icon">
+              <Icon name={g.icon} size={21} />
+              {g.id === 'money' && dueCount > 0 && <b className="dot" />}
+            </span>
+            {t(g.label)}
           </NavLink>
         ))}
       </nav>

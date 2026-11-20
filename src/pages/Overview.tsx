@@ -85,7 +85,7 @@ export default function Overview() {
       </div>
 
       <div className="stats">
-        <Link to="/guests" className="card stat" style={{ textDecoration: 'none' }}>
+        <Link to="/guests" className="card stat tone-sage" style={{ textDecoration: 'none' }}>
           <h2 className="section">{t('Guests')}</h2>
           <div className="big">
             {attending} <span>/ {s.guestTarget}</span>
@@ -95,7 +95,7 @@ export default function Overview() {
           </div>
           <Bar value={attending / (s.guestTarget || 1)} />
         </Link>
-        <Link to="/budget" className="card stat" style={{ textDecoration: 'none' }}>
+        <Link to="/budget" className="card stat tone-gold" style={{ textDecoration: 'none' }}>
           <h2 className="section">{t('Budget')}</h2>
           <div className="big">{money(spent, lang, true)}</div>
           <div className="sub">
@@ -103,7 +103,7 @@ export default function Overview() {
           </div>
           <Bar value={spent / (s.budgetTotal || 1)} tone={spent > s.budgetTotal ? 'rose' : 'gold'} />
         </Link>
-        <Link to="/checklist" className="card stat" style={{ textDecoration: 'none' }}>
+        <Link to="/checklist" className="card stat tone-sky" style={{ textDecoration: 'none' }}>
           <h2 className="section">{t('Checklist')}</h2>
           <div className="big">
             {done} <span>/ {tasks.length}</span>
@@ -111,9 +111,9 @@ export default function Overview() {
           <div className="sub">
             {t('tasks done')} · {dueSoon} {t('due this week')}
           </div>
-          <Bar value={done / (tasks.length || 1)} />
+          <Bar value={done / (tasks.length || 1)} tone="sky" />
         </Link>
-        <Link to="/vendors" className="card stat" style={{ textDecoration: 'none' }}>
+        <Link to="/vendors" className="card stat tone-rose" style={{ textDecoration: 'none' }}>
           <h2 className="section">{t('Vendors')}</h2>
           <div className="big">
             {booked} <span>/ {vendors.length}</span>

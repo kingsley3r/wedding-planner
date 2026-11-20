@@ -147,7 +147,7 @@ export function Empty({ title, children }: { title: string; children?: ReactNode
   )
 }
 
-export function Bar({ value, tone }: { value: number; tone?: 'gold' | 'rose' }) {
+export function Bar({ value, tone }: { value: number; tone?: 'gold' | 'rose' | 'sky' }) {
   const pct = Math.max(0, Math.min(100, value * 100))
   return (
     <div className={'bar' + (tone ? ' ' + tone : '')}>
