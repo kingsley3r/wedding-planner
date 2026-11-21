@@ -5,10 +5,20 @@ import { num, resizeImage, uid } from '../lib/util'
 import { Intro } from '../components/Intro'
 import { Field, PageHead, Text } from '../components/ui'
 import { useEffect, useRef, useState } from 'react'
+import { getTheme, setTheme, type Theme } from '../lib/theme'
+import { downloadBackup, listSnapshots, parseBackup, type Snapshot } from '../lib/backup'
+import { fmtDate } from '../lib/util'
 
 export default function Settings() {
   const { t, lang, setLang } = useI18n()
-  const { settings, saveSettings, list, add, remove } = useStore()
+  const { settings, saveSettings, list, add, remove, rows, restore } = useStore()
+  const [theme, setThemeState] = useState<Theme>(getTheme)
+  const [snaps, setSnaps] = useState<Snapshot[]>([])
+  const restoreRef = useRef<HTMLInputElement>(null)
+  const [restoring, setRestoring] = useState(false)
+  useEffect(() => {
+    listSnapshots().then(setSnaps)
+  }, [])
   const photos = list('photo').sort((a, b) => a.data.order - b.data.order)
   const fileRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
@@ -32,6 +42,21 @@ export default function Settings() {
       alert(t('That photo could not be read. Try another one.'))
     } finally {
       setBusy(false)
+    }
+  }
+  const doRestore = async (file?: File) => {
+    if (!file) return
+    try {
+      const b = parseBackup(await file.text())
+      const when = fmtDate(b.createdAt.slice(0, 10), lang, { day: 'numeric', month: 'long', year: 'numeric' })
+      if (!confirm(t('Replace everything in the app with the backup from {d} ({n} items)? Both phones will see the change.', { d: when, n: b.rows.length }))) return
+      setRestoring(true)
+      await restore(b.rows)
+      alert(t('Backup restored.'))
+    } catch {
+      alert(t('This file is not a wedding planner backup.'))
+    } finally {
+      setRestoring(false)
     }
   }
   const helperUrl = s.helperToken ? `${location.origin}/helper/${s.helperToken}` : ''
@@ -113,6 +138,68 @@ export default function Settings() {
         <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(ev) => { addPhotos(ev.target.files); ev.target.value = '' }} />
       </div>
       {preview && <Intro preview onDone={() => setPreview(false)} />}
+      <div className="card">
+        <div className="card-head">
+          <h2 className="section">{t('Appearance')}</h2>
+        </div>
+        <div className="chips">
+          {(['auto', 'light', 'dark'] as Theme[]).map((k) => (
+            <button
+              key={k}
+              className={'chip' + (theme === k ? ' on' : '')}
+              onClick={() => {
+                setTheme(k)
+                setThemeState(k)
+              }}
+            >
+              {t(k === 'auto' ? 'Like the phone' : k === 'light' ? 'Light' : 'Dark')}
+            </button>
+          ))}
+        </div>
+        <p className="small muted" style={{ marginTop: 10 }}>
+          {t('Each phone keeps its own choice.')}
+        </p>
+      </div>
+      <div className="card">
+        <div className="card-head">
+          <h2 className="section">{t('Backup')}</h2>
+        </div>
+        <p className="small muted" style={{ marginBottom: 12 }}>
+          {t('Download everything (guests, budget, photos, notes…) as one file. Keep it in iCloud Drive or email it to yourself. You can restore it here at any time.')}
+        </p>
+        <div className="row-gap">
+          <button className="btn small primary" onClick={() => downloadBackup(rows)}>
+            {t('Download backup')}
+          </button>
+          <button className="btn small" disabled={restoring} onClick={() => restoreRef.current?.click()}>
+            {restoring ? t('Restoring…') : t('Restore from a file')}
+          </button>
+        </div>
+        <input ref={restoreRef} type="file" accept="application/json,.json" hidden onChange={(ev) => { doRestore(ev.target.files?.[0]); ev.target.value = '' }} />
+        {snaps.length > 0 && (
+          <>
+            <h3 className="small" style={{ margin: '16px 0 6px', fontWeight: 600 }}>
+              {t('Daily copies on this phone')}
+            </h3>
+            <div className="list">
+              {snaps.map((sn) => (
+                <div key={sn.date} className="item">
+                  <div className="grow">
+                    <div className="title">{fmtDate(sn.date, lang, { weekday: 'short', day: 'numeric', month: 'long' })}</div>
+                    <div className="meta">{t('{n} items', { n: sn.count })}</div>
+                  </div>
+                  <button className="btn small ghost" onClick={() => downloadBackup(sn.backup.rows)}>
+                    {t('Download')}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+        <p className="small muted" style={{ marginTop: 12 }}>
+          {t('The app also keeps a copy of each of the last 7 days on this phone, and can save an encrypted copy every night on GitHub (see the README).')}
+        </p>
+      </div>
       <div className="card">
         <div className="card-head">
           <h2 className="section">{t('Day-of helper link')}</h2>

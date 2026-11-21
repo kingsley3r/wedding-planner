@@ -6,6 +6,8 @@ import { fmtDate, money } from '../lib/util'
 import { addMinutes, ceremonyStart } from '../pages/Program'
 import { ROLE_LABEL } from '../pages/Contacts'
 import { MOMENTS } from '../pages/Shots'
+import { MOMENTS as SONG_MOMENTS } from '../pages/Music'
+import { CIVIL } from '../pages/Civil'
 
 export interface DocMeta {
   id: string
@@ -21,17 +23,21 @@ export const DOCS: DocMeta[] = [
   { id: 'escort', group: 'Guests', title: 'Seating list A–Z', desc: 'Each guest and their table, for the entrance' },
   { id: 'placecards', group: 'Guests', title: 'Place cards', desc: 'Folded name cards, ready to cut', wide: true },
   { id: 'meals', group: 'Guests', title: 'Meals and dietary needs', desc: 'Counts and special requests for the caterer' },
+  { id: 'invitations', group: 'Guests', title: 'Invitations', desc: 'Who got one, who accepted and who declined' },
   { id: 'stays', group: 'Guests', title: 'Accommodation', desc: 'Hotels and who sleeps where' },
   { id: 'schedule', group: 'The day', title: 'Day-of schedule', desc: 'The run sheet for helpers and vendors' },
   { id: 'program', group: 'The day', title: 'Church program', desc: 'Order of service in Romanian and German' },
   { id: 'shots-photo', group: 'The day', title: 'Shot list for the photographer', desc: 'Every photo you want, by moment' },
   { id: 'shots-video', group: 'The day', title: 'Shot list for the videographer', desc: 'Every scene you want filmed, by moment' },
+  { id: 'songs', group: 'The day', title: 'Song list for the band', desc: 'Church entrance and exit, and the venue entrance' },
+  { id: 'rehearsal', group: 'The day', title: 'Rehearsal', desc: 'When, where, who comes and the run-through' },
   { id: 'packing', group: 'The day', title: 'Packing list', desc: 'What goes in which bag' },
   { id: 'contacts', group: 'The day', title: 'Contacts sheet', desc: 'Helpers, family, church, vendors and venues' },
   { id: 'vendors', group: 'Planning', title: 'Vendor contacts', desc: 'Names, phone numbers and status' },
   { id: 'budget', group: 'Planning', title: 'Budget and payments', desc: 'Every expense and payment date' },
   { id: 'bva', group: 'Planning', title: 'Budget vs actual', desc: 'Planned and actual per category, and what is still owed' },
   { id: 'checklist', group: 'Planning', title: 'Checklist', desc: 'Open and finished tasks' },
+  { id: 'civil', group: 'Planning', title: 'Civil wedding checklist', desc: 'Documents and steps for the registry office' },
   { id: 'decisions', group: 'Planning', title: 'Decision log', desc: 'What you decided, when and why' },
   { id: 'tasks', group: 'Planning', title: 'Tasks by person', desc: 'Open tasks grouped by who does them' }
 ]
@@ -51,7 +57,7 @@ export interface DocCtx {
 }
 
 /** Build one printable document. Shared by the print menu, the bundle and the day-of page. */
-export function renderDoc(doc: string, { list, t, lang }: DocCtx): { body: ReactNode; exportCsv: (() => void) | null } {
+export function renderDoc(doc: string, { list, t, lang, settings }: DocCtx): { body: ReactNode; exportCsv: (() => void) | null } {
   const guests = list('guest').sort((a, b) => a.data.name.localeCompare(b.data.name))
   const tables = list('table').sort((a, b) => a.data.name.localeCompare(b.data.name, undefined, { numeric: true }))
   const tableName = (id?: string) => tables.find((x) => x.id === id)?.data.name ?? ''
@@ -534,6 +540,117 @@ export function renderDoc(doc: string, { list, t, lang }: DocCtx): { body: React
           )
         })}
       </div>
+    )
+  } else if (doc === 'invitations') {
+    const STATE: Record<Rsvp, string> = { pending: 'Not sent', invited: 'No answer yet', attending: 'Accepted', declined: 'Declined' }
+    const byHouse = new Map<string, typeof guests>()
+    for (const g of guests) {
+      const k = g.data.household?.trim() || g.data.name
+      byHouse.set(k, [...(byHouse.get(k) ?? []), g])
+    }
+    const houses = [...byHouse.entries()].sort((a, b) => a[0].localeCompare(b[0]))
+    exportCsv = () =>
+      downloadFile('invitations.csv', csv([['Household', 'Guest', 'Sent', 'How', 'Answer'], ...guests.map((g) => [g.data.household || g.data.name, g.data.name, g.data.inviteSent, g.data.inviteHow, STATE[g.data.rsvp]])]), 'text/csv')
+    body = (
+      <table className="doc-table">
+        <thead>
+          <tr>
+            <th>{t('Household')}</th>
+            <th>{t('Sent')}</th>
+            <th>{t('Answers')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {houses.map(([h, gs]) => (
+            <tr key={h}>
+              <td>
+                <b>{h}</b>
+              </td>
+              <td style={{ whiteSpace: 'nowrap' }}>{gs[0].data.inviteSent ? fmtDate(gs[0].data.inviteSent, lang, { day: 'numeric', month: 'short' }) : '☐'}</td>
+              <td>{gs.map((g) => `${g.data.name}: ${t(STATE[g.data.rsvp])}`).join(', ')}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )
+  } else if (doc === 'songs') {
+    const songs = list('song').sort((a, b) => a.data.order - b.data.order)
+    exportCsv = () => downloadFile('songs.csv', csv([['When', 'Song', 'Artist', 'Who', 'Key', 'Notes', 'Link'], ...SONG_MOMENTS.flatMap((m) => songs.filter((x) => x.data.moment === m.id).map((x) => [m.label, x.data.title, x.data.artist, x.data.who, x.data.key, x.data.notes, x.data.link]))]), 'text/csv')
+    body = (
+      <>
+        {(settings.bandName || settings.bandContact) && <p className="doc-sub">{[settings.bandName, settings.bandContact].filter(Boolean).join(' · ')}</p>}
+        {SONG_MOMENTS.map((m) => {
+          const rows = songs.filter((x) => x.data.moment === m.id)
+          if (!rows.length) return null
+          return (
+            <div key={m.id}>
+              <h2 className="doc-h2">
+                {t(m.place)} · {t(m.label)}
+              </h2>
+              <table className="doc-table">
+                <tbody>
+                  {rows.map((x, i) => (
+                    <tr key={x.id}>
+                      <td style={{ width: 28 }}>{i + 1}.</td>
+                      <td>
+                        <b>{x.data.title}</b>
+                        {x.data.artist && <span className="muted"> · {x.data.artist}</span>}
+                        {x.data.notes && <div className="muted">{x.data.notes}</div>}
+                      </td>
+                      <td>{x.data.who}</td>
+                      <td style={{ whiteSpace: 'nowrap' }}>{x.data.key && `${t('Key')} ${x.data.key}`}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
+        })}
+      </>
+    )
+  } else if (doc === 'rehearsal') {
+    const steps = list('rehearsal').sort((a, b) => a.data.order - b.data.order)
+    body = (
+      <>
+        <p className="doc-sub">
+          {[settings.rehearsalDate && fmtDate(settings.rehearsalDate, lang, { weekday: 'long', day: 'numeric', month: 'long' }), settings.rehearsalTime, settings.rehearsalPlace].filter(Boolean).join(' · ')}
+        </p>
+        {settings.rehearsalPeople && (
+          <p className="doc-sub">
+            {t('Who comes')}: {settings.rehearsalPeople}
+          </p>
+        )}
+        <ol className="doc-steps">
+          {steps.map((x) => (
+            <li key={x.id}>
+              {x.data.time && <b>{x.data.time} · </b>}
+              {t(x.data.title)}
+              {(x.data.who || x.data.notes) && <span className="muted"> · {[x.data.who && t(x.data.who), x.data.notes].filter(Boolean).join(' · ')}</span>}
+            </li>
+          ))}
+        </ol>
+      </>
+    )
+  } else if (doc === 'civil') {
+    const done = new Set(settings.civilDone ?? [])
+    body = (
+      <>
+        {(settings.civilOffice || settings.civilDate) && <p className="doc-sub">{[settings.civilOffice, settings.civilDate && fmtDate(settings.civilDate, lang, { day: 'numeric', month: 'long', year: 'numeric' })].filter(Boolean).join(' · ')}</p>}
+        {CIVIL.map((sec) => (
+          <div key={sec.title}>
+            <h2 className="doc-h2">
+              {t(sec.title)} <span className="muted">· {t(sec.when)}</span>
+            </h2>
+            <ul className="doc-tasks">
+              {sec.steps.map((st) => (
+                <li key={st.id}>
+                  {done.has(st.id) ? '☑' : '☐'} {t(st.title)}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </>
     )
   } else if (doc === 'packing') {
     const items = list('pack')

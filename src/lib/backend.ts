@@ -32,6 +32,15 @@ const key = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim
 export const supabase: SupabaseClient | null = url && key ? createClient(url, key) : null
 export const isDemo = !supabase
 
+/** A sign-in remembered on this phone, even if it can't be refreshed right now. */
+export function hasStoredSession() {
+  try {
+    return Object.keys(localStorage).some((k) => /^sb-.*-auth-token$/.test(k))
+  } catch {
+    return false
+  }
+}
+
 export async function getSession(): Promise<Session | null> {
   if (!supabase) return null
   const { data } = await supabase.auth.getSession()

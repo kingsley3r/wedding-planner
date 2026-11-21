@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Route, Routes, Navigate, useLocation } from 'react-router-dom'
 import type { Session } from '@supabase/supabase-js'
-import { getSession, isDemo, onAuthChange } from './lib/backend'
+import { getSession, hasStoredSession, isDemo, onAuthChange } from './lib/backend'
 import { StoreProvider, useStore } from './lib/store'
 import { useI18n } from './lib/i18n'
 import { fmtDate } from './lib/util'
@@ -32,6 +32,10 @@ import Shots from './pages/Shots'
 import Decisions from './pages/Decisions'
 import Weather from './pages/Weather'
 import Honeymoon from './pages/Honeymoon'
+import Civil from './pages/Civil'
+import Invitations from './pages/Invitations'
+import Rehearsal from './pages/Rehearsal'
+import Music from './pages/Music'
 
 /** Flat list of every page, kept for anything that needs all pages in order. */
 export const NAV = GROUPS.flatMap((g) => g.pages)
@@ -63,7 +67,8 @@ function Private() {
   }, [])
 
   if (!checked) return null
-  if (!isDemo && !session) return <Login />
+  // Offline with a sign-in saved on this phone: open the saved copy instead of the login page.
+  if (!isDemo && !session && !(typeof navigator !== 'undefined' && !navigator.onLine && hasStoredSession())) return <Login />
   return (
     <StoreProvider>
       <Shell />
@@ -73,7 +78,7 @@ function Private() {
 
 function Shell() {
   const { t, lang } = useI18n()
-  const { settings, error, ready, list } = useStore()
+  const { settings, error, ready, list, offline, pending } = useStore()
   const dueCount = settings ? duePayments(list('budget'), settings.data.reminderDays ?? 7).length : 0
   const s = settings?.data
   const { pathname } = useLocation()
@@ -113,6 +118,15 @@ function Shell() {
         {isDemo && <div className="side-foot small muted">{t('Demo mode: data stays on this device.')}</div>}
       </aside>
       <main className="content">
+        {offline && !error && (
+          <div className="banner offline">
+            {pending
+              ? pending === 1
+                ? t('Offline. 1 change is saved on this phone and will sync when you are back online.')
+                : t('Offline. {n} changes are saved on this phone and will sync when you are back online.', { n: pending })
+              : t('Offline. You are seeing the copy saved on this phone.')}
+          </div>
+        )}
         {error && (
           <div className="banner error">
             {/row-level security/i.test(error)
@@ -149,6 +163,10 @@ function Shell() {
             <Route path="/shots" element={<Shots />} />
             <Route path="/decisions" element={<Decisions />} />
             <Route path="/weather" element={<Weather />} />
+            <Route path="/civil" element={<Civil />} />
+            <Route path="/invitations" element={<Invitations />} />
+            <Route path="/rehearsal" element={<Rehearsal />} />
+            <Route path="/music" element={<Music />} />
             <Route path="/honeymoon" element={<Honeymoon />} />
             <Route path="/honeymoon/:tab" element={<Honeymoon />} />
             <Route path="/print" element={<Print />} />

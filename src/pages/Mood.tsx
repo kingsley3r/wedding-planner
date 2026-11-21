@@ -4,8 +4,26 @@ import { useStore } from '../lib/store'
 import type { MoodItem, Row } from '../lib/types'
 import { buildPinterestEmbeds, isPinterestUrl, resizeImage } from '../lib/util'
 import { Empty, Field, PageHead, Select, Sheet, Text } from '../components/ui'
+import { Palette } from '../components/Palette'
 
-export const MOOD_CATEGORIES = ['Flowers', 'Dress', 'Suit', 'Decor', 'Table setting', 'Cake', 'Colours', 'Hair and makeup', 'Invitations', 'Other']
+export const MOOD_CATEGORIES = [
+  'Dress',
+  'Suit',
+  'Hair',
+  'Makeup',
+  'Rings and jewellery',
+  'Shoes and accessories',
+  'Flowers',
+  'Church',
+  'Decoration',
+  'Table setting',
+  'Seating chart',
+  'Cake',
+  'Invitations',
+  'Venue',
+  'Colours',
+  'Other'
+]
 
 function Heart({ on }: { on?: boolean }) {
   return (
@@ -72,6 +90,7 @@ export default function Mood() {
   const [boardDraft, setBoardDraft] = useState('')
   const [showBoard, setShowBoard] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [pinPick, setPinPick] = useState<{ link: string; title: string; image: string } | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const feed = useBoardFeed(board)
   const [limit, setLimit] = useState(60)
@@ -88,7 +107,21 @@ export default function Mood() {
   const shown = items
     .filter((i) => filter === 'all' || (filter === 'fav' ? i.data.favorite : i.data.category === filter))
     .sort((a, b) => Number(!!b.data.favorite) - Number(!!a.data.favorite))
-  const usedCats = MOOD_CATEGORIES.filter((c) => items.some((i) => i.data.category === c))
+  const cats = [...new Set([...MOOD_CATEGORIES, ...items.map((i) => i.data.category)])]
+  const countOf = (c: string) => items.filter((i) => i.data.category === c).length
+  const filled = cats.filter((c) => countOf(c) > 0)
+  const empty = cats.filter((c) => countOf(c) === 0)
+  const palette = settings!.data.palette ?? []
+  const paletteSources = [
+    ...items.filter((i) => i.data.kind === 'image').map((i) => i.data.src),
+    ...(feed.state === 'ok' ? feed.pins.map((p) => p.image) : [])
+  ]
+  const sortPin = async (p: { link: string; title: string; image: string }, category: string) => {
+    const saved = items.find((i) => i.data.src === p.image)
+    if (saved) await update(saved, { category })
+    else await add('mood', { kind: 'image', src: p.image, title: p.title || undefined, link: p.link || undefined, category })
+    setPinPick(null)
+  }
 
   useEffect(() => {
     buildPinterestEmbeds()
@@ -136,6 +169,45 @@ export default function Mood() {
     setIdea(null)
   }
 
+  const tile = (m: Row<'mood'>) => (
+    <div key={m.id} className="mood-tile">
+      {m.data.kind === 'pin' ? (
+        <div className="mood-pin">
+          <PinEmbed key={m.data.src} html={`<a data-pin-do="embedPin" data-pin-width="medium" href="${esc(m.data.src)}">${esc(t('Pinterest pin'))}</a>`} />
+          <a className="small muted" href={m.data.src} target="_blank" rel="noreferrer" style={{ display: 'block', padding: '8px 12px' }}>
+            {t('Open in Pinterest')} ↗
+          </a>
+        </div>
+      ) : m.data.kind === 'idea' ? (
+        <div className="mood-idea" onClick={() => setEditing({ row: m, data: { ...m.data } })}>
+          <div className="eyebrow">{t('Idea')}</div>
+          {m.data.title && <h4>{m.data.title}</h4>}
+          {m.data.notes && <p>{m.data.notes}</p>}
+        </div>
+      ) : m.data.kind === 'link' ? (
+        <a className="mood-link" href={m.data.src} target="_blank" rel="noreferrer">
+          <div className="eyebrow">{hostOf(m.data.src)}</div>
+          <h4>{m.data.title || m.data.src}</h4>
+          <span className="small">{t('Open link')} ↗</span>
+        </a>
+      ) : (
+        <img src={m.data.src} alt={m.data.title ?? ''} loading="lazy" referrerPolicy="no-referrer" onClick={() => setEditing({ row: m, data: { ...m.data } })} />
+      )}
+      <div className="mood-meta">
+        <button className="grow mood-title" onClick={() => setEditing({ row: m, data: { ...m.data } })}>
+          {m.data.kind === 'idea' || m.data.kind === 'link' ? t(m.data.category) : m.data.title || t(m.data.category)}
+        </button>
+        <button
+          className={'heart' + (m.data.favorite ? ' on' : '')}
+          aria-label={t('Favourite')}
+          onClick={() => update(m, { favorite: !m.data.favorite })}
+        >
+          <Heart on={m.data.favorite} />
+        </button>
+      </div>
+    </div>
+  )
+
   const e = editing?.data
   const set = (p: Partial<MoodItem>) => editing && setEditing({ ...editing, data: { ...editing.data, ...p } })
 
@@ -169,7 +241,7 @@ export default function Mood() {
             {feed.state === 'ok' && feed.pins.length > 0 && (
               <>
                 <p className="small muted" style={{ marginBottom: 12 }}>
-                  {t('{n} pins', { n: feed.pins.length })} · {t('Tap the heart to keep a pin in your favourites below.')}
+                  {t('{n} pins', { n: feed.pins.length })} · {t('Tap + Section to sort a pin into Hair, Dress, Decoration and so on. The heart keeps it as a favourite.')}
                 </p>
                 <div className="board-grid">
                   {feed.pins.slice(0, limit).map((p) => {
@@ -179,6 +251,9 @@ export default function Mood() {
                         <a href={p.link || board} target="_blank" rel="noreferrer">
                           <img src={p.image} alt={p.title} loading="lazy" referrerPolicy="no-referrer" />
                         </a>
+                        <button className="board-sort" onClick={() => setPinPick(p)}>
+                          {saved && saved.data.category !== 'Other' ? t(saved.data.category) : '+ ' + t('Section')}
+                        </button>
                         <button
                           className={'heart board-heart' + (saved?.data.favorite ? ' on' : '')}
                           aria-label={t('Favourite')}
@@ -256,67 +331,74 @@ export default function Mood() {
         )}
       </div>
 
-      <div className="chips" style={{ margin: '18px 0 14px' }}>
+      <div className="card">
+        <div className="card-head">
+          <h2 className="section">{t('Our colours')}</h2>
+        </div>
+        <Palette colors={palette} onChange={(c) => saveSettings({ palette: c })} sources={paletteSources} />
+      </div>
+
+      <div className="chips mood-chips" style={{ margin: '18px 0 14px' }}>
         <button className={'chip' + (filter === 'all' ? ' on' : '')} onClick={() => setFilter('all')}>
-          {t('All')}
+          {t('All sections')}
         </button>
         <button className={'chip' + (filter === 'fav' ? ' on' : '')} onClick={() => setFilter('fav')}>
           ♥ {t('Favourites')}
         </button>
-        {usedCats.map((c) => (
-          <button key={c} className={'chip' + (filter === c ? ' on' : '')} onClick={() => setFilter(c)}>
+        {cats.map((c) => (
+          <button key={c} className={'chip' + (filter === c ? ' on' : '') + (countOf(c) ? '' : ' faint')} onClick={() => setFilter(c)}>
             {t(c)}
+            {countOf(c) > 0 && <span className="chip-n">{countOf(c)}</span>}
           </button>
         ))}
       </div>
 
-      {shown.length === 0 ? (
+      {filter === 'all' && items.length > 0 ? (
+        <>
+          {filled.map((c) => (
+            <section key={c} className="mood-section">
+              <div className="mood-section-head">
+                <h2 className="section">{t(c)}</h2>
+                <button className="btn small ghost" onClick={() => setFilter(c)}>
+                  {t('Open')} · {countOf(c)}
+                </button>
+              </div>
+              <div className="mood-grid">
+                {items
+                  .filter((i) => i.data.category === c)
+                  .sort((x, y) => Number(!!y.data.favorite) - Number(!!x.data.favorite))
+                  .slice(0, 8)
+                  .map(tile)}
+              </div>
+            </section>
+          ))}
+          {empty.length > 0 && (
+            <p className="small muted" style={{ marginTop: 18 }}>
+              {t('Still empty')}: {empty.map((c) => t(c)).join(', ')}
+            </p>
+          )}
+        </>
+      ) : shown.length === 0 ? (
         <div className="card">
-          <Empty title={filter === 'fav' ? t('No favourites yet') : t('Start your mood board')}>
+          <Empty title={filter === 'fav' ? t('No favourites yet') : filter === 'all' ? t('Start your mood board') : t('Nothing in {s} yet', { s: t(filter) })}>
             <p className="small">{t('Add photos from your phone, or paste a link to an image or a Pinterest pin. Tap the heart to make it a favourite.')}</p>
           </Empty>
         </div>
       ) : (
-        <div className="mood-grid">
-          {shown.map((m) => (
-            <div key={m.id} className="mood-tile">
-              {m.data.kind === 'pin' ? (
-                <div className="mood-pin">
-                  <PinEmbed key={m.data.src} html={`<a data-pin-do="embedPin" data-pin-width="medium" href="${esc(m.data.src)}">${esc(t('Pinterest pin'))}</a>`} />
-                  <a className="small muted" href={m.data.src} target="_blank" rel="noreferrer" style={{ display: 'block', padding: '8px 12px' }}>
-                    {t('Open in Pinterest')} ↗
-                  </a>
-                </div>
-              ) : m.data.kind === 'idea' ? (
-                <div className="mood-idea" onClick={() => setEditing({ row: m, data: { ...m.data } })}>
-                  <div className="eyebrow">{t('Idea')}</div>
-                  {m.data.title && <h4>{m.data.title}</h4>}
-                  {m.data.notes && <p>{m.data.notes}</p>}
-                </div>
-              ) : m.data.kind === 'link' ? (
-                <a className="mood-link" href={m.data.src} target="_blank" rel="noreferrer">
-                  <div className="eyebrow">{hostOf(m.data.src)}</div>
-                  <h4>{m.data.title || m.data.src}</h4>
-                  <span className="small">{t('Open link')} ↗</span>
-                </a>
-              ) : (
-                <img src={m.data.src} alt={m.data.title ?? ''} loading="lazy" referrerPolicy="no-referrer" onClick={() => setEditing({ row: m, data: { ...m.data } })} />
-              )}
-              <div className="mood-meta">
-                <button className="grow mood-title" onClick={() => setEditing({ row: m, data: { ...m.data } })}>
-                  {m.data.kind === 'idea' || m.data.kind === 'link' ? t(m.data.category) : m.data.title || t(m.data.category)}
-                </button>
-                <button
-                  className={'heart' + (m.data.favorite ? ' on' : '')}
-                  aria-label={t('Favourite')}
-                  onClick={() => update(m, { favorite: !m.data.favorite })}
-                >
-                  <Heart on={m.data.favorite} />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <div className="mood-grid">{shown.map(tile)}</div>
+      )}
+
+      {pinPick && (
+        <Sheet title={t('Which section?')} onClose={() => setPinPick(null)}>
+          <img src={pinPick.image} alt="" referrerPolicy="no-referrer" style={{ width: '100%', maxHeight: 240, objectFit: 'cover', borderRadius: 12, marginBottom: 14 }} />
+          <div className="chips">
+            {cats.map((c) => (
+              <button type="button" key={c} className={'chip' + (items.find((i) => i.data.src === pinPick.image)?.data.category === c ? ' on' : '')} onClick={() => sortPin(pinPick, c)}>
+                {t(c)}
+              </button>
+            ))}
+          </div>
+        </Sheet>
       )}
 
       {linkOpen && (
@@ -371,7 +453,7 @@ export default function Mood() {
               <Text value={e.title} onChange={(v) => set({ title: v })} />
             </Field>
             <Field label={t('Category')}>
-              <Select value={e.category} onChange={(v) => set({ category: v })} options={[...new Set([...MOOD_CATEGORIES, e.category])].map((c) => ({ value: c, label: t(c) }))} />
+              <Select value={e.category} onChange={(v) => set({ category: v })} options={[...new Set([...cats, e.category])].map((c) => ({ value: c, label: t(c) }))} />
             </Field>
             <Field label={t('Notes')} full>
               <Text value={e.notes} onChange={(v) => set({ notes: v })} placeholder={t('e.g. ask the florist for this')} />

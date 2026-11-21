@@ -158,6 +158,33 @@ const P: Record<string, ReactNode> = {
       <path d="M10.5 13.5 4 11l1.5-1.5 7.5 1 4-4c.8-.8 2.2-.8 2.6-.4.4.4.4 1.8-.4 2.6l-4 4 1 7.5L14.7 21l-2.5-6.5-3.7 3.7.3 2.3-1.3 1.3-1.2-3.3L3 17.3l1.3-1.3 2.3.3z" />
     </>
   ),
+  invite: (
+    <>
+      <rect x="3.5" y="6" width="17" height="12.5" rx="2" />
+      <path d="m4 7 8 6 8-6" />
+    </>
+  ),
+  music: (
+    <>
+      <path d="M9 18V6l10-2v12" />
+      <circle cx="6.5" cy="18" r="2.5" />
+      <circle cx="16.5" cy="16" r="2.5" />
+    </>
+  ),
+  rehearsal: (
+    <>
+      <rect x="5" y="4.5" width="14" height="16" rx="2" />
+      <path d="M9 4.5V3h6v1.5" />
+      <path d="m9 13 2 2 4-4" />
+    </>
+  ),
+  civil: (
+    <>
+      <path d="M6 3.5h8.5L18 7v13.5H6z" />
+      <path d="M9 10h6M9 13.5h6" />
+      <circle cx="15" cy="17.5" r="1.6" />
+    </>
+  ),
   more: (
     <>
       <circle cx="6" cy="12" r="1.3" />
