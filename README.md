@@ -27,6 +27,13 @@ Without Supabase keys the app runs in **demo mode**: it fills itself with sample
 
 The first sign-in fills the planner with your two venues, a checklist counting down to the date, a day-of outline and budget categories. Change anything in Settings or on each page.
 
+## Wedding website and guest photos
+
+The wedding website (`/w/<secret>`) and the guest photo upload (`/p/<secret>`) are public pages: anyone with the link can open them without signing in. Before you use them, set them up once in Supabase. Open **SQL Editor > New query**, paste [`supabase/website-photos.sql`](supabase/website-photos.sql), and click **Run**.
+
+- **Wedding website:** shows the names, the date, the venues with maps, the schedule items you tick, and the texts you write. It never shows the budget, the guest list or your notes.
+- **Guest photos:** go to a private storage bucket. Guests can upload, but they can't see or delete anything. Only the two of you can see the photos.
+
 ## How it is built
 
 - Vite + React + TypeScript, plain CSS (`src/styles.css` holds the colours and type).

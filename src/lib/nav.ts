@@ -29,6 +29,8 @@ export const GROUPS: NavGroup[] = [
     pages: [
       { to: '/guests', label: 'Guests & RSVPs', icon: 'guests' },
       { to: '/invitations', label: 'Invitations', icon: 'invite' },
+      { to: '/website', label: 'Wedding website', icon: 'globe' },
+      { to: '/guest-photos', label: 'Guest photos', icon: 'camera' },
       { to: '/seating', label: 'Seating', icon: 'seating' },
       { to: '/stays', label: 'Accommodation', icon: 'stays' }
     ]
@@ -55,6 +57,7 @@ export const GROUPS: NavGroup[] = [
       { to: '/program', label: 'Church program', icon: 'program' },
       { to: '/music', label: 'Band & songs', icon: 'music' },
       { to: '/rehearsal', label: 'Rehearsal', icon: 'rehearsal' },
+      { to: '/kids', label: 'Kids’ corner', icon: 'kids' },
       { to: '/venues', label: 'Venues', icon: 'venues' },
       { to: '/contacts', label: 'Contacts', icon: 'contacts' },
       { to: '/shots', label: 'Shot list', icon: 'shots' },
@@ -97,6 +100,7 @@ export const GROUPS: NavGroup[] = [
     icon: 'more',
     tone: 'gold',
     pages: [
+      { to: '/activity', label: 'Activity', icon: 'activity' },
       { to: '/print', label: 'Print & export', icon: 'print' },
       { to: '/settings', label: 'Settings', icon: 'settings' }
     ]

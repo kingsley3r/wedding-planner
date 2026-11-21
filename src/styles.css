@@ -658,6 +658,72 @@ main.content { min-width: 0; }
 .picker-slider input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%; background: #fff; border: 1px solid rgba(0, 0, 0, 0.2); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2); }
 .picker-slider input[type='range']::-moz-range-thumb { width: 26px; height: 26px; border-radius: 50%; background: #fff; border: 1px solid rgba(0, 0, 0, 0.2); }
 
+
+/* ---------- Round 5: website, guest photos, kids, activity ---------- */
+.link-card .link-qr { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.link-card .link-qr p { flex: 1; }
+.qr { border-radius: 10px; border: 1px solid var(--line); flex: none; background: #fff; }
+.faq-edit { display: grid; gap: 6px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; }
+.faq-edit .btn { justify-self: start; }
+.kid-time { min-width: 88px; font-size: 13px; color: var(--muted); }
+.feed-item { align-items: flex-start; }
+.feed-item .title b { font-weight: 600; }
+.feed-dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 7px; flex: none; background: var(--gold, #b89b6a); }
+.feed-dot.add { background: #7c8b74; }
+.feed-dot.delete { background: #b5655f; }
+.gp-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.gp-tile { aspect-ratio: 1; border: 0; border-radius: 10px; background: var(--surface-2) center / cover no-repeat; cursor: pointer; padding: 0; }
+.lightbox { position: fixed; inset: 0; z-index: 100; background: rgba(10, 9, 8, 0.92); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: calc(16px + env(safe-area-inset-top)) 12px calc(16px + env(safe-area-inset-bottom)); }
+.lightbox img { max-width: 100%; max-height: calc(100% - 70px); border-radius: 10px; object-fit: contain; }
+.lightbox-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; max-width: 640px; margin-top: 12px; color: #f4efe6; flex-wrap: wrap; }
+.lightbox-bar .btn.ghost { color: #f4efe6; }
+
+/* Public wedding website and photo page */
+.site { max-width: 640px; margin: 0 auto; padding: calc(16px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom)); min-height: 100vh; }
+.site-langs { display: flex; justify-content: flex-end; gap: 2px; }
+.site-langs button { border: 0; background: none; font-size: 12px; letter-spacing: 1px; color: var(--muted); padding: 6px 8px; border-radius: 8px; cursor: pointer; }
+.site-langs button.on { color: var(--ink); background: var(--surface-2); }
+.site-hero { text-align: center; padding: 36px 0 26px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.site-hero h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(40px, 12vw, 60px); line-height: 1.05; }
+.site-hero h1 span { font-style: italic; color: var(--gold, #b89b6a); }
+.site-eyebrow { font-size: 11.5px; letter-spacing: 2.4px; text-transform: uppercase; color: var(--gold, #b89b6a); font-weight: 600; }
+.site-date { font-family: var(--serif); font-size: 21px; }
+.site-count { font-size: 13px; color: var(--muted); }
+.site-colours { display: flex; gap: 6px; margin: 6px 0 8px; }
+.site-colours span { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--line); }
+.site-card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 22px 20px; margin-bottom: 14px; }
+.site-card h2 { font-family: var(--serif); font-weight: 400; font-size: 27px; margin: 2px 0 8px; }
+.site-card p + p { margin-top: 8px; }
+.site-welcome { font-family: var(--serif); font-size: 19px; line-height: 1.5; text-align: center; }
+.site-time { font-size: 17px; font-weight: 500; margin-bottom: 4px; }
+.site-map { width: 100%; height: 200px; border: 0; border-radius: 12px; margin-top: 12px; background: var(--surface-2); }
+.site-plan { display: grid; gap: 12px; }
+.site-plan > div { display: grid; grid-template-columns: 58px 1fr; gap: 10px; align-items: baseline; }
+.site-plan b { font-weight: 600; font-variant-numeric: tabular-nums; color: var(--gold, #b89b6a); }
+.site-plan small { display: block; color: var(--muted); font-size: 13px; }
+.site-stays { display: grid; gap: 14px; }
+.site-stays > div { display: grid; gap: 3px; }
+.site-stays a { color: var(--ink); font-size: 14px; }
+.site-faq { border-top: 1px solid var(--line); padding: 12px 0; }
+.site-faq summary { cursor: pointer; font-weight: 500; }
+.site-faq p { margin-top: 8px; color: var(--muted); }
+.site-foot { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 24px; }
+.site .field span { font-size: 12px; color: var(--muted); font-weight: 500; }
+.site-upload { width: 100%; min-height: 54px; font-size: 16px; margin-top: 14px; }
+.upload-bar { height: 6px; border-radius: 99px; background: var(--surface-2); overflow: hidden; margin-top: 12px; }
+.upload-bar span { display: block; height: 100%; background: var(--gold, #b89b6a); transition: width 0.3s; }
+.site-thanks { margin-top: 14px; text-align: center; font-family: var(--serif); font-size: 20px; }
+
+/* Photo QR table cards */
+.doc-qr-cards { display: grid; grid-template-columns: repeat(2, 1fr); border-top: 1px dashed #ccc; border-left: 1px dashed #ccc; }
+.doc-qr-card { border-right: 1px dashed #ccc; border-bottom: 1px dashed #ccc; padding: 22px 14px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; break-inside: avoid; }
+.doc-qr-card .qr { border: 0; }
+.doc-qr-names { font-family: var(--serif); font-size: 22px; }
+.doc-qr-card b { font-family: var(--serif); font-weight: 500; font-size: 19px; }
+.doc-qr-card span { font-size: 12px; color: #6f675d; }
+.doc-qr-card small { font-size: 11px; color: #8a8177; }
+.doc h3 { font-family: var(--serif); font-weight: 500; font-size: 20px; margin: 16px 0 6px; }
+
 /* ---------- Dark mode: follows the phone unless chosen in Settings ---------- */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {

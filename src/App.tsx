@@ -27,6 +27,12 @@ import Contacts from './pages/Contacts'
 import Stays from './pages/Stays'
 import Program from './pages/Program'
 import Helper from './pages/Helper'
+import Site from './pages/Site'
+import PhotoUpload from './pages/PhotoUpload'
+import Website from './pages/Website'
+import GuestPhotos from './pages/GuestPhotos'
+import Kids from './pages/Kids'
+import Activity from './pages/Activity'
 import Packing from './pages/Packing'
 import Shots from './pages/Shots'
 import Decisions from './pages/Decisions'
@@ -43,10 +49,13 @@ export const NAV = GROUPS.flatMap((g) => g.pages)
 export default function App() {
   const { pathname } = useLocation()
   // The day-of page is public: it opens from a secret link without signing in.
-  if (pathname.startsWith('/helper/')) {
+  // So are the wedding website and the guest photo upload.
+  if (/^\/(helper|w|p)\//.test(pathname)) {
     return (
       <Routes>
         <Route path="/helper/:token" element={<Helper />} />
+        <Route path="/w/:token" element={<Site />} />
+        <Route path="/p/:token" element={<PhotoUpload />} />
       </Routes>
     )
   }
@@ -167,6 +176,10 @@ function Shell() {
             <Route path="/invitations" element={<Invitations />} />
             <Route path="/rehearsal" element={<Rehearsal />} />
             <Route path="/music" element={<Music />} />
+            <Route path="/website" element={<Website />} />
+            <Route path="/guest-photos" element={<GuestPhotos />} />
+            <Route path="/kids" element={<Kids />} />
+            <Route path="/activity" element={<Activity />} />
             <Route path="/honeymoon" element={<Honeymoon />} />
             <Route path="/honeymoon/:tab" element={<Honeymoon />} />
             <Route path="/print" element={<Print />} />

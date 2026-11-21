@@ -185,6 +185,31 @@ const P: Record<string, ReactNode> = {
       <circle cx="15" cy="17.5" r="1.6" />
     </>
   ),
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M3.5 12h17" />
+      <path d="M12 3.5c2.4 2.3 3.6 5.1 3.6 8.5s-1.2 6.2-3.6 8.5c-2.4-2.3-3.6-5.1-3.6-8.5S9.6 5.8 12 3.5z" />
+    </>
+  ),
+  camera: (
+    <>
+      <path d="M4 8.5h3.2L9 6h6l1.8 2.5H20v11H4z" />
+      <circle cx="12" cy="13.5" r="3.4" />
+    </>
+  ),
+  kids: (
+    <>
+      <circle cx="12" cy="7" r="2.6" />
+      <path d="M7 11.5 12 12l5-.5" />
+      <path d="M12 12v4.5l-3 4M12 16.5l3 4" />
+    </>
+  ),
+  activity: (
+    <>
+      <path d="M3.5 12h4l2.5-6.5 4 13 2.5-6.5h4" />
+    </>
+  ),
   more: (
     <>
       <circle cx="6" cy="12" r="1.3" />
