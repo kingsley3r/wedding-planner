@@ -205,11 +205,13 @@ export async function photoInfo(token: string): Promise<{ partner1?: string; par
   return (data as { partner1?: string } | null) ?? null
 }
 
-export async function uploadGuestPhoto(token: string, blob: Blob, name: string) {
+/** Uploads the original file, untouched: full size and quality. */
+export async function uploadGuestPhoto(token: string, file: File, name: string) {
   if (!supabase) throw new Error('Demo mode: photos are not uploaded.')
   const slug = name.normalize('NFD').replace(/[^\w]+/g, '-').replace(/^-|-$/g, '').slice(0, 30) || 'guest'
-  const path = `${token}/${Date.now()}-${slug}-${Math.random().toString(36).slice(2, 8)}.jpg`
-  const { error } = await supabase.storage.from(PHOTO_BUCKET).upload(path, blob, { contentType: 'image/jpeg', upsert: false })
+  const ext = (file.name.match(/\.([a-z0-9]{2,5})$/i)?.[1] ?? (file.type.split('/')[1] || 'jpg')).toLowerCase()
+  const path = `${token}/${Date.now()}-${slug}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+  const { error } = await supabase.storage.from(PHOTO_BUCKET).upload(path, file, { contentType: file.type || 'image/jpeg', upsert: false })
   if (error) throw error
 }
 
@@ -237,7 +239,7 @@ export async function listGuestPhotos(folders: string[]): Promise<GuestPhoto[]> 
     const { data: signed, error: e2 } = await supabase.storage.from(PHOTO_BUCKET).createSignedUrls(paths, 60 * 60 * 6)
     if (e2) throw e2
     files.forEach((x, i) => {
-      const m = x.name.match(/^(\d+)-(.+)-[a-z0-9]+\.jpg$/)
+      const m = x.name.match(/^(\d+)-(.+)-[a-z0-9]+\.[a-z0-9]+$/i)
       out.push({ path: paths[i], url: signed?.[i]?.signedUrl ?? '', from: m ? m[2].replace(/-/g, ' ') : '', at: m ? new Date(+m[1]).toISOString() : x.created_at ?? '' })
     })
   }

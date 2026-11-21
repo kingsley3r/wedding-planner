@@ -6,28 +6,6 @@ import { fmtDate } from '../lib/util'
 
 const NAME = 'wp-guest-name'
 
-/** Shrink a photo to at most 2400 px on its long side, as JPEG. Keeps uploads quick on mobile data. */
-function shrink(file: File): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    const url = URL.createObjectURL(file)
-    img.onload = () => {
-      const scale = Math.min(1, 2400 / Math.max(img.width, img.height))
-      const c = document.createElement('canvas')
-      c.width = Math.round(img.width * scale)
-      c.height = Math.round(img.height * scale)
-      c.getContext('2d')!.drawImage(img, 0, 0, c.width, c.height)
-      URL.revokeObjectURL(url)
-      c.toBlob((b) => (b ? resolve(b) : reject(new Error('Could not read image'))), 'image/jpeg', 0.88)
-    }
-    img.onerror = () => {
-      URL.revokeObjectURL(url)
-      reject(new Error('Could not read image'))
-    }
-    img.src = url
-  })
-}
-
 /** Guests upload their photos here from the QR code. No sign-in, and they can't see anyone else's photos. */
 export default function PhotoUpload() {
   const { token = '' } = useParams()
@@ -66,7 +44,7 @@ export default function PhotoUpload() {
     setProgress({ done, total: list.length, failed })
     for (const f of list) {
       try {
-        await uploadGuestPhoto(token, await shrink(f), name.trim())
+        await uploadGuestPhoto(token, f, name.trim())
         done++
       } catch {
         failed++

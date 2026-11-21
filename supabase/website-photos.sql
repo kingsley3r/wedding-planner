@@ -28,9 +28,10 @@ grant execute on function public.wedding_site(text) to anon, authenticated;
 
 -- 2. Guest photos: guests with the secret link can upload photos, but can't see or delete any.
 --    Only the two of you can see, download and delete them.
+-- Photos are stored as the original files (full size), up to 50 MB each, the most the free plan allows.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('guest-photos', 'guest-photos', false, 15728640, array['image/jpeg'])
-on conflict (id) do nothing;
+values ('guest-photos', 'guest-photos', false, 52428800, array['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'image/webp'])
+on conflict (id) do update set file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
 
 create or replace function public.photo_token_ok(tok text) returns boolean
 language sql stable security definer set search_path = public as $$
