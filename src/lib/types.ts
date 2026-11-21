@@ -90,6 +90,8 @@ export interface ScheduleItem {
   place?: string
   who?: string
   notes?: string
+  /** Show this on the wedding website. */
+  public?: boolean
 }
 
 export interface Note {
@@ -177,6 +179,46 @@ export interface Settings {
   /** Wedding colours as hex codes, light to dark. */
   palette?: string[]
   bandContact?: string
+  /** Wedding website for guests: secret part of the link, and its texts. */
+  siteToken?: string
+  siteWelcome?: string
+  siteParking?: string
+  siteDress?: string
+  siteKids?: string
+  siteGifts?: string
+  siteContact?: string
+  siteStays?: boolean
+  siteFaq?: { q: string; a: string }[]
+  /** Guest photo upload: the current secret link, and every folder ever used (old links keep their photos). */
+  photoToken?: string
+  photoFolders?: string[]
+  /** Kids' corner */
+  kidsRoom?: string
+  kidsNotes?: string
+  /** Activity feed: sign-in email → the name to show. */
+  people?: Record<string, string>
+}
+
+export interface KidSlot {
+  time: string
+  until?: string
+  who: string
+  where?: string
+  notes?: string
+}
+export interface KidTask {
+  title: string
+  type: 'activity' | 'supply'
+  done?: boolean
+  notes?: string
+}
+export interface LogEntry {
+  at: string
+  who: string
+  action: 'add' | 'edit' | 'delete'
+  kind: string
+  label: string
+  rowId: string
 }
 
 export interface RehearsalStep {
@@ -310,6 +352,9 @@ export interface KindMap {
   hmExpense: HmExpense
   shot: Shot
   decision: Decision
+  kidSlot: KidSlot
+  kidTask: KidTask
+  log: LogEntry
   settings: Settings
 }
 export type Kind = keyof KindMap

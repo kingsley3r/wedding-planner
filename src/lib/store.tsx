@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { backend } from './backend'
+import { backend, currentEmail } from './backend'
 import { starterRows } from './seed'
-import type { Kind, KindMap, Row, Settings } from './types'
+import type { Kind, KindMap, LogEntry, Row, Settings } from './types'
 import { uid } from './util'
 import { kvGet, kvSet } from './local'
 import { saveDailySnapshot } from './backup'
@@ -36,6 +36,29 @@ interface Store {
 
 const Ctx = createContext<Store | null>(null)
 
+const LOG_MAX = 400
+/** A short name for a row in the activity feed. */
+function labelOf(row: Row, patch?: object): string {
+  if (row.kind === 'settings') {
+    const k = Object.keys(patch ?? {})[0] ?? ''
+    const area: [RegExp, string][] = [
+      [/^civil/, 'Civil wedding'],
+      [/^rehearsal/, 'Rehearsal'],
+      [/^band/, 'Band & songs'],
+      [/^palette/, 'Our colours'],
+      [/^(site|people)/, 'Wedding website'],
+      [/^photo/, 'Guest photos'],
+      [/^kids/, "Kids' corner"],
+      [/^(honeymoon|homeAirport)/, 'Honeymoon'],
+      [/^pinterest/, 'Mood board']
+    ]
+    return area.find(([re]) => re.test(k))?.[1] ?? 'Settings'
+  }
+  const d = row.data as unknown as Record<string, unknown>
+  const v = d.name ?? d.title ?? d.hotel ?? d.label ?? d.item ?? d.text ?? d.question ?? d.city ?? d.who ?? d.body ?? d.url
+  return typeof v === 'string' ? v.slice(0, 60) : ''
+}
+
 // Rows this device wrote recently. Realtime echoes of them are ignored so a slow echo
 // cannot overwrite newer typing.
 const recentWrites = new Map<string, number>()
@@ -49,6 +72,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [offline, setOffline] = useState(false)
   const [pending, setPending] = useState(0)
   const outbox = useRef<Op[]>([])
+  const rowsRef = useRef<Row[]>([])
+  const lastLog = useRef(new Map<string, Row<'log'>>())
+  rowsRef.current = rows
   const flushing = useRef(false)
 
   const queue = useCallback(async (op: Op) => {
@@ -188,6 +214,40 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [queue]
   )
 
+  /** Note who changed what. Several edits to the same thing in a few minutes count as one. */
+  const log = useCallback(
+    async (action: LogEntry['action'], row: Row, patch?: object) => {
+      if (row.kind === 'log') return
+      try {
+        const who = await currentEmail()
+        const now = new Date()
+        const logs = rowsRef.current.filter((r) => r.kind === 'log') as Row<'log'>[]
+        const label = labelOf(row, patch)
+        const key = row.kind === 'settings' ? `${row.id}|${who}|${label}` : `${row.id}|${who}`
+        const mine = lastLog.current.get(key)
+        const same = (mine && mine.data.action !== 'delete' && now.getTime() - Date.parse(mine.data.at) < 5 * 60_000 ? mine : undefined) ?? logs.find(
+          (l) => l.data.rowId === row.id && l.data.who === who && (row.kind !== 'settings' || l.data.label === label) && l.data.action !== 'delete' && now.getTime() - Date.parse(l.data.at) < 5 * 60_000
+        )
+        if (same && action !== 'delete') {
+          const upd = { ...same, data: { ...same.data, at: now.toISOString(), label: label || same.data.label } }
+          lastLog.current.set(key, upd)
+          await persist(upd as Row)
+        } else {
+          const entry: Row<'log'> = { id: uid(), kind: 'log', data: { at: now.toISOString(), who, action, kind: row.kind, label, rowId: row.id } }
+          lastLog.current.set(key, entry)
+          await persist(entry as Row)
+          if (logs.length >= LOG_MAX) {
+            const old = [...logs].sort((a, b) => a.data.at.localeCompare(b.data.at)).slice(0, logs.length - LOG_MAX + 1)
+            for (const o of old) await removeRow(o.id)
+          }
+        }
+      } catch {
+        /* the feed is a nice-to-have; never block a change because of it */
+      }
+    },
+    [persist, removeRow]
+  )
+
   const store = useMemo<Store>(() => {
     const settings = (rows.find((r) => r.kind === 'settings') as Row<'settings'> | undefined) ?? null
     return {
@@ -199,12 +259,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       async add(kind, data) {
         const row = { id: uid(), kind, data } as Row<typeof kind>
         await persist(row as Row)
+        void log('add', row as Row)
         return row as never
       },
       async update(row, patch) {
-        await persist({ ...row, data: { ...row.data, ...patch } } as Row)
+        const next = { ...row, data: { ...row.data, ...patch } } as Row
+        await persist(next)
+        void log('edit', next)
       },
-      remove: removeRow,
+      async remove(id) {
+        const row = rows.find((r) => r.id === id)
+        await removeRow(id)
+        if (row) void log('delete', row)
+      },
       offline,
       pending,
       async restore(backupRows) {
@@ -213,10 +280,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         for (const r of backupRows) await persist(r)
       },
       async saveSettings(patch) {
-        if (settings) await persist({ ...settings, data: { ...settings.data, ...patch } })
+        if (!settings) return
+        const next = { ...settings, data: { ...settings.data, ...patch } }
+        await persist(next)
+        void log('edit', next, patch)
       }
     }
-  }, [rows, ready, error, persist, removeRow, offline, pending])
+  }, [rows, ready, error, persist, removeRow, offline, pending, log])
 
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>
 }

@@ -1,3 +1,4 @@
+import { Qr } from '../components/Qr'
 import type { ReactNode } from 'react'
 import type { Lang } from '../lib/i18n'
 import type { Kind, Row, Rsvp, Settings } from '../lib/types'
@@ -24,6 +25,7 @@ export const DOCS: DocMeta[] = [
   { id: 'placecards', group: 'Guests', title: 'Place cards', desc: 'Folded name cards, ready to cut', wide: true },
   { id: 'meals', group: 'Guests', title: 'Meals and dietary needs', desc: 'Counts and special requests for the caterer' },
   { id: 'invitations', group: 'Guests', title: 'Invitations', desc: 'Who got one, who accepted and who declined' },
+  { id: 'photo-card', group: 'Guests', title: 'Photo QR table cards', desc: 'Guests scan the code and send you their photos', wide: true },
   { id: 'stays', group: 'Guests', title: 'Accommodation', desc: 'Hotels and who sleeps where' },
   { id: 'schedule', group: 'The day', title: 'Day-of schedule', desc: 'The run sheet for helpers and vendors' },
   { id: 'program', group: 'The day', title: 'Church program', desc: 'Order of service in Romanian and German' },
@@ -31,6 +33,7 @@ export const DOCS: DocMeta[] = [
   { id: 'shots-video', group: 'The day', title: 'Shot list for the videographer', desc: 'Every scene you want filmed, by moment' },
   { id: 'songs', group: 'The day', title: 'Song list for the band', desc: 'Church entrance and exit, and the venue entrance' },
   { id: 'rehearsal', group: 'The day', title: 'Rehearsal', desc: 'When, where, who comes and the run-through' },
+  { id: 'kids', group: 'The day', title: 'Kids’ corner', desc: 'Children, who looks after them and what to bring' },
   { id: 'packing', group: 'The day', title: 'Packing list', desc: 'What goes in which bag' },
   { id: 'contacts', group: 'The day', title: 'Contacts sheet', desc: 'Helpers, family, church, vendors and venues' },
   { id: 'vendors', group: 'Planning', title: 'Vendor contacts', desc: 'Names, phone numbers and status' },
@@ -606,6 +609,63 @@ export function renderDoc(doc: string, { list, t, lang, settings }: DocCtx): { b
             </div>
           )
         })}
+      </>
+    )
+  } else if (doc === 'photo-card') {
+    const url = settings.photoToken ? `${location.origin}/p/${settings.photoToken}` : ''
+    body = url ? (
+      <div className="doc-qr-cards">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="doc-qr-card">
+            <div className="doc-qr-names">
+              {settings.partner1} &amp; {settings.partner2}
+            </div>
+            <Qr text={url} size={150} />
+            <b>{t('Share your photos')}</b>
+            <span>Teilt eure Fotos mit uns · Trimiteți-ne pozele voastre</span>
+            <small>{t('Scan with your phone camera. No app needed.')}</small>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <p className="doc-sub">{t('Create the photo link on the Guest photos page first.')}</p>
+    )
+  } else if (doc === 'kids') {
+    const kids = list('guest').filter((g) => g.data.child && g.data.rsvp !== 'declined')
+    const slots = list('kidSlot').sort((a, b) => a.data.time.localeCompare(b.data.time))
+    const tasks = list('kidTask')
+    body = (
+      <>
+        {(settings.kidsRoom || settings.kidsNotes) && <p className="doc-sub">{[settings.kidsRoom, settings.kidsNotes].filter(Boolean).join(' · ')}</p>}
+        <h3>{t('Children')}</h3>
+        <p>{kids.map((g) => g.data.name + (g.data.diet ? ` (${g.data.diet})` : '')).join(', ') || '—'}</p>
+        <h3>{t('Who looks after the children')}</h3>
+        <table className="doc-table">
+          <tbody>
+            {slots.map((x) => (
+              <tr key={x.id}>
+                <td style={{ whiteSpace: 'nowrap' }}>{x.data.time + (x.data.until ? `–${x.data.until}` : '')}</td>
+                <td>{x.data.who}</td>
+                <td>{[x.data.where, x.data.notes].filter(Boolean).join(' · ')}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {(['activity', 'supply'] as const).map((type) => (
+          <div key={type}>
+            <h3>{t(type === 'activity' ? 'Activities' : 'To bring')}</h3>
+            <ul className="doc-steps">
+              {tasks
+                .filter((x) => x.data.type === type)
+                .map((x) => (
+                  <li key={x.id}>
+                    {x.data.done ? '☑' : '☐'} {t(x.data.title)}
+                    {x.data.notes && <span className="muted"> · {x.data.notes}</span>}
+                  </li>
+                ))}
+            </ul>
+          </div>
+        ))}
       </>
     )
   } else if (doc === 'rehearsal') {

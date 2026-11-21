@@ -167,4 +167,82 @@ export async function loadDayOf(token: string): Promise<Row[] | null> {
   return s && (s.data as { helperToken?: string }).helperToken === token ? rows : null
 }
 
+/** Rows for the public wedding website: names and date, the site texts, venues, the schedule items marked public, and hotels if chosen. */
+export async function loadSite(token: string): Promise<Row[] | null> {
+  if (supabase) {
+    const { data, error } = await supabase.rpc('wedding_site', { tok: token })
+    if (error) throw error
+    const rows = (data ?? []) as Row[]
+    return rows.length ? rows : null
+  }
+  const rows = await demoBackend().load()
+  const s = rows.find((r) => r.kind === 'settings')?.data as { siteToken?: string; siteStays?: boolean } | undefined
+  if (!s || s.siteToken !== token) return null
+  return rows.filter((r) => r.kind === 'settings' || r.kind === 'venue' || (r.kind === 'schedule' && (r.data as { public?: boolean }).public) || (r.kind === 'stay' && s.siteStays))
+}
+
+/** The sign-in email on this phone, for the activity feed. */
+let emailCache: string | undefined
+export async function currentEmail(): Promise<string> {
+  if (emailCache !== undefined) return emailCache
+  if (!supabase) return (emailCache = '')
+  const { data } = await supabase.auth.getSession()
+  return (emailCache = data.session?.user.email ?? '')
+}
+
+// ---------- Guest photos (Supabase Storage bucket "guest-photos") ----------
+export const PHOTO_BUCKET = 'guest-photos'
+
+/** Names and date for the photo page, or null if the link is off. */
+export async function photoInfo(token: string): Promise<{ partner1?: string; partner2?: string; date?: string } | null> {
+  if (!supabase) {
+    const rows = await demoBackend().load()
+    const s = rows.find((r) => r.kind === 'settings')?.data as { photoToken?: string; partner1?: string; partner2?: string; date?: string } | undefined
+    return s && s.photoToken === token ? s : null
+  }
+  const { data, error } = await supabase.rpc('guest_photo_info', { tok: token })
+  if (error) throw error
+  return (data as { partner1?: string } | null) ?? null
+}
+
+export async function uploadGuestPhoto(token: string, blob: Blob, name: string) {
+  if (!supabase) throw new Error('Demo mode: photos are not uploaded.')
+  const slug = name.normalize('NFD').replace(/[^\w]+/g, '-').replace(/^-|-$/g, '').slice(0, 30) || 'guest'
+  const path = `${token}/${Date.now()}-${slug}-${Math.random().toString(36).slice(2, 8)}.jpg`
+  const { error } = await supabase.storage.from(PHOTO_BUCKET).upload(path, blob, { contentType: 'image/jpeg', upsert: false })
+  if (error) throw error
+}
+
+export interface GuestPhoto {
+  path: string
+  url: string
+  from: string
+  at: string
+}
+
+export async function listGuestPhotos(folders: string[]): Promise<GuestPhoto[]> {
+  if (!supabase || !folders.length) return []
+  const out: GuestPhoto[] = []
+  for (const f of folders) {
+    const { data, error } = await supabase.storage.from(PHOTO_BUCKET).list(f, { limit: 1000, sortBy: { column: 'created_at', order: 'desc' } })
+    if (error) throw error
+    const files = (data ?? []).filter((x) => x.id)
+    if (!files.length) continue
+    const paths = files.map((x) => `${f}/${x.name}`)
+    const { data: signed, error: e2 } = await supabase.storage.from(PHOTO_BUCKET).createSignedUrls(paths, 60 * 60 * 6)
+    if (e2) throw e2
+    files.forEach((x, i) => {
+      const m = x.name.match(/^(\d+)-(.+)-[a-z0-9]+\.jpg$/)
+      out.push({ path: paths[i], url: signed?.[i]?.signedUrl ?? '', from: m ? m[2].replace(/-/g, ' ') : '', at: m ? new Date(+m[1]).toISOString() : x.created_at ?? '' })
+    })
+  }
+  return out.sort((a, b) => b.at.localeCompare(a.at))
+}
+
+export async function deleteGuestPhoto(path: string) {
+  if (!supabase) return
+  const { error } = await supabase.storage.from(PHOTO_BUCKET).remove([path])
+  if (error) throw error
+}
+
 export const backend: Backend = supabase ? supabaseBackend(supabase) : demoBackend()
