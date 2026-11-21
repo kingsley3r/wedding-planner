@@ -1121,5 +1121,6 @@ export const de: Record<string, string> = {
   "Small gift bags": "Kleine Geschenktüten",
   "Blankets and pillows for the little ones": "Decken und Kissen für die Kleinen",
   "Name stickers": "Namensaufkleber",
-  "Spare clothes bag": "Tasche mit Wechselkleidung"
+  "Spare clothes bag": "Tasche mit Wechselkleidung",
+  "Photo uploads are not set up in Supabase yet.": "Foto-Uploads sind in Supabase noch nicht eingerichtet."
 }

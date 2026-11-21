@@ -224,9 +224,14 @@ export async function listGuestPhotos(folders: string[]): Promise<GuestPhoto[]> 
   if (!supabase || !folders.length) return []
   const out: GuestPhoto[] = []
   for (const f of folders) {
-    const { data, error } = await supabase.storage.from(PHOTO_BUCKET).list(f, { limit: 1000, sortBy: { column: 'created_at', order: 'desc' } })
-    if (error) throw error
-    const files = (data ?? []).filter((x) => x.id)
+    // Storage lists at most 1000 files at a time, so page through them.
+    const files: { id: string | null; name: string; created_at: string | null }[] = []
+    for (let offset = 0; ; offset += 1000) {
+      const { data, error } = await supabase.storage.from(PHOTO_BUCKET).list(f, { limit: 1000, offset, sortBy: { column: 'created_at', order: 'desc' } })
+      if (error) throw error
+      files.push(...(data ?? []).filter((x) => x.id))
+      if ((data ?? []).length < 1000) break
+    }
     if (!files.length) continue
     const paths = files.map((x) => `${f}/${x.name}`)
     const { data: signed, error: e2 } = await supabase.storage.from(PHOTO_BUCKET).createSignedUrls(paths, 60 * 60 * 6)

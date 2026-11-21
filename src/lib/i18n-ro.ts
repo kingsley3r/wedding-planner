@@ -1121,5 +1121,6 @@ export const ro: Record<string, string> = {
   "Small gift bags": "Pungi mici cu cadouri",
   "Blankets and pillows for the little ones": "Pături și perne pentru cei mici",
   "Name stickers": "Etichete cu nume",
-  "Spare clothes bag": "Geantă cu haine de schimb"
+  "Spare clothes bag": "Geantă cu haine de schimb",
+  "Photo uploads are not set up in Supabase yet.": "Încărcarea pozelor nu este încă configurată în Supabase."
 }
