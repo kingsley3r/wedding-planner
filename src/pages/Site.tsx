@@ -61,7 +61,7 @@ export default function Site() {
         {langs}
         <div className="site-card" style={{ textAlign: 'center', marginTop: 80 }}>
           <h2>{t('This link no longer works')}</h2>
-          <p className="muted">{err && /wedding_site/.test(err) ? t('The website is not set up in Supabase yet.') : t('Ask the couple for the new link.')}</p>
+          <p className="muted">{err && /wedding_site|function|schema cache/i.test(err) ? t('The website is not set up in Supabase yet.') : t('Ask the couple for the new link.')}</p>
         </div>
       </div>
     )

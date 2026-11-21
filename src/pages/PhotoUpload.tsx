@@ -33,6 +33,7 @@ export default function PhotoUpload() {
   const { token = '' } = useParams()
   const { t, lang, setLang } = useI18n()
   const [info, setInfo] = useState<{ partner1?: string; partner2?: string; date?: string } | null | undefined>(undefined)
+  const [notSetUp, setNotSetUp] = useState(false)
   const [name, setName] = useState(() => {
     try {
       return localStorage.getItem(NAME) ?? ''
@@ -46,7 +47,10 @@ export default function PhotoUpload() {
   useEffect(() => {
     photoInfo(token)
       .then(setInfo)
-      .catch(() => setInfo(null))
+      .catch((e) => {
+        setNotSetUp(/guest_photo_info|function|schema cache/i.test(e instanceof Error ? e.message : String(e?.message ?? e)))
+        setInfo(null)
+      })
   }, [token])
 
   const send = async (files: FileList | null) => {
@@ -88,7 +92,7 @@ export default function PhotoUpload() {
         {langs}
         <div className="site-card" style={{ textAlign: 'center', marginTop: 80 }}>
           <h2>{t('This link no longer works')}</h2>
-          <p className="muted">{t('Ask the couple for the new link.')}</p>
+          <p className="muted">{notSetUp ? t('Photo uploads are not set up in Supabase yet.') : t('Ask the couple for the new link.')}</p>
         </div>
       </div>
     )
