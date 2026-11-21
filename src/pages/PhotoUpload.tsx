@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { photoInfo, uploadGuestPhoto } from '../lib/backend'
+import { guestGallery, photoInfo, uploadGuestPhoto, type GuestPhoto } from '../lib/backend'
 import { useI18n, type Lang } from '../lib/i18n'
 import { fmtDate } from '../lib/util'
 
@@ -21,6 +21,16 @@ export default function PhotoUpload() {
   })
   const [progress, setProgress] = useState<{ done: number; total: number; failed: number } | null>(null)
   const input = useRef<HTMLInputElement>(null)
+  const [gallery, setGallery] = useState<GuestPhoto[]>([])
+  const [open, setOpen] = useState<GuestPhoto | null>(null)
+  const loadGallery = () =>
+    guestGallery(token)
+      .then(setGallery)
+      .catch(() => setGallery([]))
+  useEffect(() => {
+    loadGallery()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token])
 
   useEffect(() => {
     photoInfo(token)
@@ -51,6 +61,7 @@ export default function PhotoUpload() {
       }
       setProgress({ done, total: list.length, failed })
     }
+    loadGallery()
   }
 
   const langs = (
@@ -89,7 +100,7 @@ export default function PhotoUpload() {
       </header>
       <section className="site-card">
         <p className="muted" style={{ marginBottom: 14 }}>
-          {t('Thank you for celebrating with us! Choose the photos you took, as many as you like. Only the two of us will see them.')}
+          {t('Thank you for celebrating with us! Choose the photos you took, as many as you like, in full quality.')}
         </p>
         <label className="field">
           <span>{t('Your name (optional)')}</span>
@@ -110,6 +121,35 @@ export default function PhotoUpload() {
           </p>
         )}
       </section>
+      {gallery.length > 0 && (
+        <section className="site-card">
+          <h2>{t('Photos from everyone')}</h2>
+          <p className="muted small" style={{ marginBottom: 12 }}>
+            {t('{n} photos. Tap one to see it big and download it.', { n: gallery.length })}
+          </p>
+          <div className="gp-grid">
+            {gallery.map((p) => (
+              <button key={p.path} className="gp-tile" onClick={() => setOpen(p)} style={{ backgroundImage: `url("${p.url}")` }} aria-label={p.from || t('Photo')} />
+            ))}
+          </div>
+        </section>
+      )}
+      {open && (
+        <div className="lightbox" onClick={() => setOpen(null)} role="dialog">
+          <img src={open.url} alt="" />
+          <div className="lightbox-bar" onClick={(e) => e.stopPropagation()}>
+            <span className="small">{open.from}</span>
+            <span className="row-gap">
+              <a className="btn small" href={open.download}>
+                {t('Download')}
+              </a>
+              <button className="btn small ghost" onClick={() => setOpen(null)}>
+                {t('Close')}
+              </button>
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

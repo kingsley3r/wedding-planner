@@ -32,7 +32,7 @@ The first sign-in fills the planner with your two venues, a checklist counting d
 The wedding website (`/w/<secret>`) and the guest photo upload (`/p/<secret>`) are public pages: anyone with the link can open them without signing in. Before you use them, set them up once in Supabase. Open **SQL Editor > New query**, paste [`supabase/website-photos.sql`](supabase/website-photos.sql), and click **Run**.
 
 - **Wedding website:** shows the names, the date, the venues with maps, the schedule items you tick, and the texts you write. It never shows the budget, the guest list or your notes.
-- **Guest photos:** go to a private storage bucket. Guests can upload, but they can't see or delete anything. Only the two of you can see the photos.
+- **Guest photos:** are kept as the original files. Guests with the link can upload photos, and they can see and download the shared ones. Photos you mark "Only us" move to a private bucket that only the two of you can open. You can also turn sharing off completely.
 
 ## How it is built
 

@@ -1122,5 +1122,15 @@ export const de: Record<string, string> = {
   "Blankets and pillows for the little ones": "Decken und Kissen für die Kleinen",
   "Name stickers": "Namensaufkleber",
   "Spare clothes bag": "Tasche mit Wechselkleidung",
-  "Photo uploads are not set up in Supabase yet.": "Foto-Uploads sind in Supabase noch nicht eingerichtet."
+  "Photo uploads are not set up in Supabase yet.": "Foto-Uploads sind in Supabase noch nicht eingerichtet.",
+  "Guests scan the QR code and upload their photos straight from their phone. No app or account needed. Everyone with the link sees the shared photos and can download them. Photos you mark “Only us” are hidden from guests.": "Gäste scannen den QR-Code und laden ihre Fotos direkt vom Handy hoch. Keine App und kein Konto nötig. Alle mit dem Link sehen die geteilten Fotos und können sie herunterladen. Fotos, die ihr als „Nur wir“ markiert, sind für Gäste unsichtbar.",
+  "Guests can see and download each other’s photos": "Gäste können die Fotos der anderen sehen und herunterladen",
+  "Turn off to keep every photo for the two of you.": "Ausschalten, damit alle Fotos nur für euch beide sind.",
+  "Shared": "Geteilt",
+  "Only us": "Nur wir",
+  "Share with guests": "Mit Gästen teilen",
+  "Thank you for celebrating with us! Choose the photos you took, as many as you like, in full quality.": "Danke, dass ihr mit uns gefeiert habt! Wählt eure Fotos aus, so viele ihr wollt, in voller Qualität.",
+  "Photos from everyone": "Fotos von allen",
+  "{n} photos. Tap one to see it big and download it.": "{n} Fotos. Tippe auf eines, um es groß zu sehen und herunterzuladen.",
+  "Close": "Schließen"
 }

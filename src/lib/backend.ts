@@ -215,40 +215,80 @@ export async function uploadGuestPhoto(token: string, file: File, name: string) 
   if (error) throw error
 }
 
+export const PRIVATE_BUCKET = 'guest-photos-private'
+
 export interface GuestPhoto {
   path: string
   url: string
+  /** Link that saves the file instead of opening it. */
+  download: string
   from: string
   at: string
+  /** Only the two of you see it. */
+  private?: boolean
 }
 
+const fileName = (path: string) => path.split('/').pop() ?? 'photo.jpg'
+function describe(path: string, created?: string | null) {
+  const m = fileName(path).match(/^(\d+)-(.+)-[a-z0-9]+\.[a-z0-9]+$/i)
+  return { from: m && m[2] !== 'guest' ? m[2].replace(/-/g, ' ') : '', at: m ? new Date(+m[1]).toISOString() : created ?? '' }
+}
+function publicPhoto(path: string, created?: string | null): GuestPhoto {
+  const { data } = supabase!.storage.from(PHOTO_BUCKET).getPublicUrl(path)
+  const { data: dl } = supabase!.storage.from(PHOTO_BUCKET).getPublicUrl(path, { download: fileName(path) })
+  return { path, url: data.publicUrl, download: dl.publicUrl, ...describe(path, created) }
+}
+
+async function listFolder(bucket: string, folder: string) {
+  // Storage lists at most 1000 files at a time, so page through them.
+  const files: { name: string; created_at: string | null }[] = []
+  for (let offset = 0; ; offset += 1000) {
+    const { data, error } = await supabase!.storage.from(bucket).list(folder, { limit: 1000, offset, sortBy: { column: 'created_at', order: 'desc' } })
+    if (error) throw error
+    files.push(...(data ?? []).filter((x) => x.id))
+    if ((data ?? []).length < 1000) break
+  }
+  return files.map((x) => ({ path: `${folder}/${x.name}`, created: x.created_at }))
+}
+
+/** Every guest photo, shared and private, for the two of you. */
 export async function listGuestPhotos(folders: string[]): Promise<GuestPhoto[]> {
   if (!supabase || !folders.length) return []
   const out: GuestPhoto[] = []
   for (const f of folders) {
-    // Storage lists at most 1000 files at a time, so page through them.
-    const files: { id: string | null; name: string; created_at: string | null }[] = []
-    for (let offset = 0; ; offset += 1000) {
-      const { data, error } = await supabase.storage.from(PHOTO_BUCKET).list(f, { limit: 1000, offset, sortBy: { column: 'created_at', order: 'desc' } })
+    for (const x of await listFolder(PHOTO_BUCKET, f)) out.push(publicPhoto(x.path, x.created))
+    const priv = await listFolder(PRIVATE_BUCKET, f).catch(() => [])
+    if (priv.length) {
+      const paths = priv.map((x) => x.path)
+      const { data: signed, error } = await supabase.storage.from(PRIVATE_BUCKET).createSignedUrls(paths, 60 * 60 * 6)
       if (error) throw error
-      files.push(...(data ?? []).filter((x) => x.id))
-      if ((data ?? []).length < 1000) break
+      const { data: dls } = await supabase.storage.from(PRIVATE_BUCKET).createSignedUrls(paths, 60 * 60 * 6, { download: true })
+      priv.forEach((x, i) => out.push({ path: x.path, url: signed?.[i]?.signedUrl ?? '', download: dls?.[i]?.signedUrl ?? '', private: true, ...describe(x.path, x.created) }))
     }
-    if (!files.length) continue
-    const paths = files.map((x) => `${f}/${x.name}`)
-    const { data: signed, error: e2 } = await supabase.storage.from(PHOTO_BUCKET).createSignedUrls(paths, 60 * 60 * 6)
-    if (e2) throw e2
-    files.forEach((x, i) => {
-      const m = x.name.match(/^(\d+)-(.+)-[a-z0-9]+\.[a-z0-9]+$/i)
-      out.push({ path: paths[i], url: signed?.[i]?.signedUrl ?? '', from: m ? m[2].replace(/-/g, ' ') : '', at: m ? new Date(+m[1]).toISOString() : x.created_at ?? '' })
-    })
   }
   return out.sort((a, b) => b.at.localeCompare(a.at))
 }
 
-export async function deleteGuestPhoto(path: string) {
+/** The shared photos, for guests with the link. */
+export async function guestGallery(token: string): Promise<GuestPhoto[]> {
+  if (!supabase) return []
+  const { data, error } = await supabase.rpc('guest_photo_list', { tok: token })
+  if (error) throw error
+  return ((data ?? []) as { name: string; created_at: string }[]).map((x) => publicPhoto(x.name, x.created_at))
+}
+
+/** Move a photo between shared and "only us". */
+export async function setPhotoPrivate(p: GuestPhoto, makePrivate: boolean) {
+  if (!supabase || !!p.private === makePrivate) return
+  const from = makePrivate ? PHOTO_BUCKET : PRIVATE_BUCKET
+  const to = makePrivate ? PRIVATE_BUCKET : PHOTO_BUCKET
+  const { error } = await supabase.storage.from(from).move(p.path, p.path, { destinationBucket: to })
+  if (error) throw error
+}
+
+export async function deleteGuestPhoto(p: GuestPhoto) {
   if (!supabase) return
-  const { error } = await supabase.storage.from(PHOTO_BUCKET).remove([path])
+  const { error } = await supabase.storage.from(p.private ? PRIVATE_BUCKET : PHOTO_BUCKET).remove([p.path])
   if (error) throw error
 }
 
