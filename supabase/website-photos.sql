@@ -26,12 +26,16 @@ $$;
 revoke all on function public.wedding_site(text) from public;
 grant execute on function public.wedding_site(text) to anon, authenticated;
 
--- 2. Guest photos: guests with the secret link can upload photos, but can't see or delete any.
---    Only the two of you can see, download and delete them.
--- Photos are stored as the original files (full size), up to 50 MB each, the most the free plan allows.
+-- 2. Guest photos: guests with the secret link can upload photos, and see and download the shared ones.
+--    Photos you mark "Only us" move to a second, private bucket that only the two of you can open.
+--    Files are stored as the originals (full size), up to 50 MB each, the most the free plan allows.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('guest-photos', 'guest-photos', false, 52428800, array['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'image/webp'])
-on conflict (id) do update set file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+values ('guest-photos', 'guest-photos', true, 52428800, array['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'image/webp'])
+on conflict (id) do update set public = true, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('guest-photos-private', 'guest-photos-private', false, 52428800, array['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'image/webp'])
+on conflict (id) do update set public = false, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
 
 create or replace function public.photo_token_ok(tok text) returns boolean
 language sql stable security definer set search_path = public as $$
@@ -47,14 +51,28 @@ $$;
 revoke all on function public.guest_photo_info(text) from public;
 grant execute on function public.guest_photo_info(text) to anon, authenticated;
 
+-- The shared photos, for guests with the link (unless you turned sharing off in the app).
+create or replace function public.guest_photo_list(tok text)
+returns table (name text, created_at timestamptz)
+language sql stable security definer set search_path = public, storage as $$
+  select o.name, o.created_at
+  from storage.objects o, public.items s
+  where s.kind = 'settings' and s.data->>'photoToken' = tok and length(tok) >= 24
+    and coalesce(s.data->>'photoShareOff', 'false') <> 'true'
+    and o.bucket_id = 'guest-photos'
+    and (storage.foldername(o.name))[1] in (select jsonb_array_elements_text(coalesce(s.data->'photoFolders', '[]'::jsonb)))
+  order by o.created_at desc;
+$$;
+revoke all on function public.guest_photo_list(text) from public;
+grant execute on function public.guest_photo_list(text) to anon, authenticated;
+
 drop policy if exists "guests upload with the link" on storage.objects;
 create policy "guests upload with the link" on storage.objects for insert to anon, authenticated
   with check (bucket_id = 'guest-photos' and public.photo_token_ok((storage.foldername(name))[1]));
 
 drop policy if exists "couple sees guest photos" on storage.objects;
-create policy "couple sees guest photos" on storage.objects for select to authenticated
-  using (bucket_id = 'guest-photos' and public.is_allowed());
-
 drop policy if exists "couple deletes guest photos" on storage.objects;
-create policy "couple deletes guest photos" on storage.objects for delete to authenticated
-  using (bucket_id = 'guest-photos' and public.is_allowed());
+drop policy if exists "couple manages guest photos" on storage.objects;
+create policy "couple manages guest photos" on storage.objects for all to authenticated
+  using (bucket_id in ('guest-photos', 'guest-photos-private') and public.is_allowed())
+  with check (bucket_id in ('guest-photos', 'guest-photos-private') and public.is_allowed());

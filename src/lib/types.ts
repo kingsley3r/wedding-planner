@@ -192,6 +192,8 @@ export interface Settings {
   /** Guest photo upload: the current secret link, and every folder ever used (old links keep their photos). */
   photoToken?: string
   photoFolders?: string[]
+  /** Guests don't see each other's photos. */
+  photoShareOff?: boolean
   /** Kids' corner */
   kidsRoom?: string
   kidsNotes?: string

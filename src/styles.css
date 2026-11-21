@@ -672,7 +672,8 @@ main.content { min-width: 0; }
 .feed-dot.add { background: #7c8b74; }
 .feed-dot.delete { background: #b5655f; }
 .gp-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
-.gp-tile { aspect-ratio: 1; border: 0; border-radius: 10px; background: var(--surface-2) center / cover no-repeat; cursor: pointer; padding: 0; }
+.gp-tile { position: relative; aspect-ratio: 1; border: 0; border-radius: 10px; background: var(--surface-2) center / cover no-repeat; cursor: pointer; padding: 0; }
+.gp-lock { position: absolute; left: 6px; bottom: 6px; font-size: 10.5px; background: rgba(22, 20, 18, 0.72); color: #fff; padding: 2px 7px; border-radius: 99px; }
 .lightbox { position: fixed; inset: 0; z-index: 100; background: rgba(10, 9, 8, 0.92); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: calc(16px + env(safe-area-inset-top)) 12px calc(16px + env(safe-area-inset-bottom)); }
 .lightbox img { max-width: 100%; max-height: calc(100% - 70px); border-radius: 10px; object-fit: contain; }
 .lightbox-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; max-width: 640px; margin-top: 12px; color: #f4efe6; flex-wrap: wrap; }

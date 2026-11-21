@@ -1122,5 +1122,15 @@ export const ro: Record<string, string> = {
   "Blankets and pillows for the little ones": "Pături și perne pentru cei mici",
   "Name stickers": "Etichete cu nume",
   "Spare clothes bag": "Geantă cu haine de schimb",
-  "Photo uploads are not set up in Supabase yet.": "Încărcarea pozelor nu este încă configurată în Supabase."
+  "Photo uploads are not set up in Supabase yet.": "Încărcarea pozelor nu este încă configurată în Supabase.",
+  "Guests scan the QR code and upload their photos straight from their phone. No app or account needed. Everyone with the link sees the shared photos and can download them. Photos you mark “Only us” are hidden from guests.": "Invitații scanează codul QR și încarcă pozele direct de pe telefon. Fără aplicație sau cont. Toți cei cu linkul văd pozele partajate și le pot descărca. Pozele marcate „Doar noi” sunt ascunse invitaților.",
+  "Guests can see and download each other’s photos": "Invitații pot vedea și descărca pozele celorlalți",
+  "Turn off to keep every photo for the two of you.": "Dezactivați ca toate pozele să fie doar pentru voi doi.",
+  "Shared": "Partajate",
+  "Only us": "Doar noi",
+  "Share with guests": "Partajează cu invitații",
+  "Thank you for celebrating with us! Choose the photos you took, as many as you like, in full quality.": "Mulțumim că ați sărbătorit cu noi! Alegeți pozele făcute, câte doriți, la calitate maximă.",
+  "Photos from everyone": "Pozele tuturor",
+  "{n} photos. Tap one to see it big and download it.": "{n} poze. Atingeți una ca s-o vedeți mare și s-o descărcați.",
+  "Close": "Închide"
 }
