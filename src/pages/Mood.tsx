@@ -228,6 +228,13 @@ export default function Mood() {
 
       <div className="card">
         <div className="card-head">
+          <h2 className="section">{t('Our colours')}</h2>
+        </div>
+        <Palette colors={palette} onChange={(c) => saveSettings({ palette: c })} sources={paletteSources} />
+      </div>
+
+      <div className="card">
+        <div className="card-head">
           <h2 className="section">{t('Our Pinterest board')}</h2>
           {board && (
             <a className="btn small" href={board} target="_blank" rel="noreferrer">
@@ -329,13 +336,6 @@ export default function Mood() {
             {t('In the Pinterest app: open the board, tap Share, then Copy link, and paste it here.')}
           </p>
         )}
-      </div>
-
-      <div className="card">
-        <div className="card-head">
-          <h2 className="section">{t('Our colours')}</h2>
-        </div>
-        <Palette colors={palette} onChange={(c) => saveSettings({ palette: c })} sources={paletteSources} />
       </div>
 
       <div className="chips mood-chips" style={{ margin: '18px 0 14px' }}>
