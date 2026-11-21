@@ -15,6 +15,9 @@ export interface Guest {
   tableId?: string
   stayId?: string
   notes?: string
+  /** Date the invitation went out (yyyy-mm-dd). */
+  inviteSent?: string
+  inviteHow?: 'post' | 'hand' | 'digital'
 }
 
 export interface Installment {
@@ -162,6 +165,40 @@ export interface Settings {
   honeymoonEnd?: string
   /** Where you fly from, e.g. VIE or GRZ */
   homeAirport?: string
+  /** Civil wedding: steps ticked off in the guide, and the registry office details. */
+  civilDone?: string[]
+  civilDate?: string
+  civilOffice?: string
+  rehearsalDate?: string
+  rehearsalTime?: string
+  rehearsalPlace?: string
+  rehearsalPeople?: string
+  bandName?: string
+  /** Wedding colours as hex codes, light to dark. */
+  palette?: string[]
+  bandContact?: string
+}
+
+export interface RehearsalStep {
+  title: string
+  order: number
+  time?: string
+  who?: string
+  notes?: string
+  done?: boolean
+}
+
+export type SongMoment = 'prelude' | 'church-in' | 'service' | 'church-out' | 'venue-in' | 'venue'
+export interface Song {
+  title: string
+  moment: SongMoment
+  order: number
+  artist?: string
+  /** Band, choir, soloist… */
+  who?: string
+  key?: string
+  link?: string
+  notes?: string
 }
 
 export interface PackItem {
@@ -265,6 +302,8 @@ export interface KindMap {
   program: ProgramItem
   photo: Photo
   pack: PackItem
+  rehearsal: RehearsalStep
+  song: Song
   hmDest: HmDest
   hmFlight: HmFlight
   hmStay: HmStay
